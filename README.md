@@ -113,45 +113,45 @@ FORBIDDEN:
 ### Prerequisites
 
 - Node.js v18 or higher
-- npm v9 or higher
+- Bun or npm (either works)
 - Git
 
 ### For Dev A (Contracts)
 
 ```bash
 cd contracts
-npm install
+bun install                 # or: npm install
 cp .env.example .env
 # Edit .env with your configuration
-npx hardhat compile
-npx hardhat test
+bun hardhat compile         # or: npx hardhat compile
+bun hardhat test            # or: npx hardhat test
 ```
 
 ### For Dev B (Frontend)
 
 ```bash
 cd frontend
-npm install
+bun install                 # or: npm install
 cp .env.example .env
-npm run dev
+bun run dev                 # or: npm run dev
 ```
 
 ### For Dev C (Oracle)
 
 ```bash
 cd oracle
-npm install
+bun install                 # or: npm install
 cp .env.example .env
-npm run dev
+bun run dev                 # or: npm run dev
 ```
 
 ### For Dev C (Backend)
 
 ```bash
 cd backend
-npm install
+bun install                 # or: npm install
 cp .env.example .env
-npm run dev
+bun run dev                 # or: npm run dev
 ```
 
 ## Environment Configuration
