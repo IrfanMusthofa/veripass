@@ -1,5 +1,6 @@
 import { db } from "./index";
-import { serviceProviders, serviceRecords } from "./schema";
+import { assets, serviceProviders, serviceRecords } from "./schema";
+import { calculateHash } from "../lib/hash";
 
 async function seed() {
   console.log("🌱 Seeding database...");
@@ -18,7 +19,31 @@ async function seed() {
       providerType: "inspector",
       isTrusted: true,
     },
-  ]);
+  ]).onConflictDoNothing();
+
+  // Create a sample asset (required for service records FK)
+  const assetData = {
+    manufacturer: "Rolex",
+    model: "Submariner Date 126610LN",
+    serialNumber: "M123456789",
+    manufacturedDate: "2023-06-15",
+    description: "Black dial and bezel, Oystersteel case",
+  };
+
+  const dataHash = calculateHash(assetData);
+
+  await db.insert(assets).values({
+    assetId: 1,
+    dataHash,
+    manufacturer: assetData.manufacturer,
+    model: assetData.model,
+    serialNumber: assetData.serialNumber,
+    manufacturedDate: assetData.manufacturedDate,
+    description: assetData.description,
+    images: [],
+    metadata: null,
+    createdBy: "0x0000000000000000000000000000000000000000", // System/seed address
+  }).onConflictDoNothing();
 
   // Seed example service record
   await db.insert(serviceRecords).values({
@@ -31,7 +56,7 @@ async function seed() {
     workPerformed: ["Movement cleaning", "Water resistance test", "Gasket replacement"],
     notes: "Watch in excellent condition",
     verified: true,
-  });
+  }).onConflictDoNothing();
 
   console.log("✅ Database seeded!");
 }
