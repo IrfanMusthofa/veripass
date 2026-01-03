@@ -1,0 +1,37 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "dev:oracle": "tsx watch src/oracle.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:oracle": "node dist/oracle.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx src/db/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Backend API for VeriPass Asset Passport System",
+  "dependencies": {
+    "@hono/node-server": "^1.19.5",
+    "axios": "^1.7.0",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "ethers": "^6.13.0",
+    "hono": "^4.10.3",
+    "postgres": "^3.4.7",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "drizzle-kit": "^0.31.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
