@@ -32,7 +32,9 @@ export async function createAsset(
     }
 
     // Asset is pending and same user - update it (retry scenario)
+    // Include assetId in hash to ensure uniqueness even with identical metadata
     const metadata = {
+      assetId: input.assetId,
       manufacturer: input.manufacturer,
       model: input.model,
       serialNumber: input.serialNumber,
@@ -66,8 +68,9 @@ export async function createAsset(
     );
   }
 
-  // Calculate data hash (only core metadata fields)
+  // Calculate data hash (include assetId to ensure uniqueness even with identical metadata)
   const metadata = {
+    assetId: input.assetId,
     manufacturer: input.manufacturer,
     model: input.model,
     serialNumber: input.serialNumber,
@@ -76,19 +79,6 @@ export async function createAsset(
   };
 
   const dataHash = calculateHash(metadata);
-
-  // Check if an asset with the same data hash already exists
-  const existingByHash = await db
-    .select()
-    .from(assets)
-    .where(eq(assets.dataHash, dataHash))
-    .limit(1);
-
-  if (existingByHash.length > 0) {
-    throw new ConflictException(
-      "An asset with identical metadata already exists. Each asset must have unique metadata (manufacturer, model, serial number, manufactured date)."
-    );
-  }
 
   // Insert asset
   const inserted = await db

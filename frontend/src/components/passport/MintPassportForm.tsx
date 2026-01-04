@@ -162,13 +162,22 @@ export function MintPassportForm({ onSuccess }: MintPassportFormProps) {
 
     // Legacy mode: hash locally and mint directly
     if (useLegacyMode || !isBackendAvailable) {
+      if (!nextTokenId) {
+        toast.error('Unable to get next token ID');
+        return;
+      }
+
       try {
         let metadataHash: `0x${string}`;
         if (useLegacyMode && legacyMetadata) {
-          JSON.parse(legacyMetadata); // Validate JSON
-          metadataHash = hashMetadata(legacyMetadata);
+          // For legacy JSON mode, parse and add assetId
+          const parsed = JSON.parse(legacyMetadata);
+          const withAssetId = { assetId: Number(nextTokenId), ...parsed };
+          metadataHash = hashMetadata(withAssetId);
         } else {
+          // Include assetId in hash for uniqueness even with identical metadata
           const metadata = {
+            assetId: Number(nextTokenId),
             manufacturer: formData.manufacturer,
             model: formData.model,
             serialNumber: formData.serialNumber,
