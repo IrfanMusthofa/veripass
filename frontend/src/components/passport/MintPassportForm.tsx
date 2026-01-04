@@ -3,7 +3,7 @@ import { useAccount, useChainId } from 'wagmi';
 import { isAddress } from 'viem';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardBody, CardHeader, Button, Input, Textarea } from '@/components/common';
-import { useMintPassport, useIsMinter, useNextTokenId, useCreateAsset, useIsBackendAvailable } from '@/hooks';
+import { useMintPassport, useIsMinter, useNextTokenId, useCreateAsset, useUpdateMintStatus, useIsBackendAvailable } from '@/hooks';
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks/useToast';
 import { hashMetadata } from '@/lib';
@@ -53,10 +53,14 @@ export function MintPassportForm({ onSuccess }: MintPassportFormProps) {
   const { data: nextTokenId } = useNextTokenId(chainId);
   const { mint, isPending: isMinting, isConfirming, isSuccess, error: mintError, hash } = useMintPassport(chainId);
   const { mutateAsync: createAsset, isPending: isCreatingAsset } = useCreateAsset();
+  const { mutateAsync: updateMintStatus } = useUpdateMintStatus();
 
   // Track if we've already handled success/error
   const handledHash = useRef<string | null>(null);
   const handledError = useRef<Error | null>(null);
+
+  // Track the pending asset ID for status updates
+  const pendingAssetId = useRef<number | null>(null);
 
   // Auto-fill recipient with connected address on mount only
   const hasInitializedRef = useRef(false);
@@ -87,18 +91,41 @@ export function MintPassportForm({ onSuccess }: MintPassportFormProps) {
       handledHash.current = hash;
       toast.success('Passport minted successfully!');
       onSuccess?.(hash);
+
+      // Update mint status in backend
+      if (pendingAssetId.current && isBackendAvailable && !useLegacyMode) {
+        updateMintStatus({
+          assetId: pendingAssetId.current,
+          data: { status: 'MINTED', txHash: hash },
+        }).catch(() => {
+          // Silently fail - the mint succeeded on-chain which is what matters
+        });
+        pendingAssetId.current = null;
+      }
+
       // eslint-disable-next-line react-hooks/set-state-in-effect
       resetForm();
     }
-  }, [isSuccess, hash, toast, onSuccess, resetForm]);
+  }, [isSuccess, hash, toast, onSuccess, resetForm, updateMintStatus, isBackendAvailable, useLegacyMode]);
 
   // Handle minting error
   useEffect(() => {
     if (mintError && handledError.current !== mintError) {
       handledError.current = mintError;
       toast.error(mintError.message || 'Failed to mint passport');
+
+      // Update mint status to FAILED in backend
+      if (pendingAssetId.current && isBackendAvailable && !useLegacyMode) {
+        updateMintStatus({
+          assetId: pendingAssetId.current,
+          data: { status: 'FAILED' },
+        }).catch(() => {
+          // Silently fail
+        });
+        pendingAssetId.current = null;
+      }
     }
-  }, [mintError, toast]);
+  }, [mintError, toast, updateMintStatus, isBackendAvailable, useLegacyMode]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -170,14 +197,18 @@ export function MintPassportForm({ onSuccess }: MintPassportFormProps) {
 
     try {
       // Create asset in backend
+      const assetId = Number(nextTokenId);
       const response = await createAsset({
-        assetId: Number(nextTokenId),
+        assetId,
         manufacturer: formData.manufacturer,
         model: formData.model,
         serialNumber: formData.serialNumber,
         manufacturedDate: formData.manufacturedDate,
         description: formData.description || undefined,
       });
+
+      // Track the asset ID for status update after mint
+      pendingAssetId.current = assetId;
 
       // Mint with the hash from backend
       mint(formData.recipient as `0x${string}`, response.data.dataHash as `0x${string}`);

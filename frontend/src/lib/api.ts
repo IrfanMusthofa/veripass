@@ -5,6 +5,7 @@ import type {
   AuthResponse,
   UserResponse,
   CreateAssetRequest,
+  UpdateMintStatusRequest,
   AssetResponse,
   CreateEvidenceRequest,
   EvidenceResponse,
@@ -123,6 +124,16 @@ class ApiClient {
 
   async getAssetByHash(hash: string): Promise<ApiResponse<AssetResponse>> {
     return this.request<ApiResponse<AssetResponse>>(`/api/assets/by-hash/${hash}`);
+  }
+
+  async updateMintStatus(
+    assetId: number,
+    data: UpdateMintStatusRequest
+  ): Promise<ApiResponse<AssetResponse>> {
+    return this.request<ApiResponse<AssetResponse>>(`/api/assets/${assetId}/mint-status`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   }
 
   // Evidence endpoints

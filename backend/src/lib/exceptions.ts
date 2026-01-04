@@ -33,6 +33,13 @@ export class UnauthorizedException extends HttpException {
 }
 
 /**
+ * 403 Forbidden
+ */
+export class ForbiddenException extends HttpException {
+  readonly statusCode = 403;
+}
+
+/**
  * 404 Not Found
  */
 export class NotFoundException extends HttpException {

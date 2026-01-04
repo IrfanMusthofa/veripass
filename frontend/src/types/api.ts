@@ -42,6 +42,13 @@ export interface CreateAssetRequest {
   metadata?: Record<string, unknown>;
 }
 
+export type MintStatus = 'PENDING' | 'MINTED' | 'FAILED';
+
+export interface UpdateMintStatusRequest {
+  status: 'MINTED' | 'FAILED';
+  txHash?: string;
+}
+
 export interface AssetResponse {
   id: number;
   assetId: number;
@@ -53,8 +60,11 @@ export interface AssetResponse {
   description: string | null;
   images: string[];
   metadata: Record<string, unknown> | null;
+  mintStatus: MintStatus;
+  txHash: string | null;
   createdBy: string;
   createdAt: string;
+  mintedAt: string | null;
 }
 
 // Evidence types

@@ -1,10 +1,12 @@
 import { Hono } from "hono";
-import { createAsset, getAssetByHash, getAssetById } from "../services/asset.service";
+import { createAsset, getAssetByHash, getAssetById, updateMintStatus } from "../services/asset.service";
 import {
   createAssetSchema,
+  updateMintStatusSchema,
   assetIdParamSchema,
   hashParamSchema,
   CreateAssetInput,
+  UpdateMintStatusInput,
   AssetIdParam,
   HashParam
 } from "../dtos/asset.dto";
@@ -31,5 +33,20 @@ assetRouter.get("/:assetId", validate({ schema: assetIdParamSchema, target: Vali
   const result = await getAssetById(assetId);
   return c.json(result);
 });
+
+// Update mint status (MINTED or FAILED)
+assetRouter.patch(
+  "/:assetId/mint-status",
+  authMiddleware,
+  validate({ schema: assetIdParamSchema, target: ValidationTarget.PARAM }),
+  validate({ schema: updateMintStatusSchema }),
+  async (c) => {
+    const { assetId } = getValidated<AssetIdParam>(c, ValidationTarget.PARAM);
+    const body = getValidated<UpdateMintStatusInput>(c, ValidationTarget.BODY);
+    const user = getAuthUser(c);
+    const result = await updateMintStatus(assetId, body, user);
+    return c.json(result);
+  }
+);
 
 export default assetRouter;
