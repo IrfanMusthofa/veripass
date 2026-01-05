@@ -37,13 +37,19 @@ export const assets = pgTable(
     images: jsonb("images").$type<string[]>(), // Array of image URLs
     metadata: jsonb("metadata").$type<Record<string, unknown>>(), // Any extra fields
 
+    // Mint status: PENDING (waiting for tx), MINTED (confirmed), FAILED (tx failed/cancelled)
+    mintStatus: varchar("mint_status", { length: 20 }).default("PENDING").notNull(),
+    txHash: varchar("tx_hash", { length: 66 }), // Transaction hash when minted
+
     // Tracking
     createdBy: varchar("created_by", { length: 42 }).notNull(), // User wallet address
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    mintedAt: timestamp("minted_at"),
   },
   (table) => [
     index("asset_id_idx").on(table.assetId),
     index("data_hash_idx").on(table.dataHash),
+    index("mint_status_idx").on(table.mintStatus),
   ]
 );
 
@@ -60,18 +66,19 @@ export const evidence = pgTable(
     assetId: bigint("asset_id", { mode: "number" }).notNull(),
     dataHash: varchar("data_hash", { length: 66 }).notNull().unique(),
 
-    // Event details (gets hashed)
+    // Event details
     eventType: varchar("event_type", { length: 20 }).notNull(), // MAINTENANCE, VERIFICATION, etc.
     eventDate: varchar("event_date", { length: 10 }), // YYYY-MM-DD
-    providerId: varchar("provider_id", { length: 255 }),
     providerName: varchar("provider_name", { length: 255 }),
     description: text("description"),
 
-    // Additional data (flexible)
-    files: jsonb("files").$type<Array<{ url: string; type: string; name: string }>>(),
-    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    // Raw event data (user-provided JSON)
+    eventData: jsonb("event_data").$type<Record<string, unknown>>(),
 
-    // Verification tracking
+    // Status: PENDING (created, not on-chain), CONFIRMED (recorded on-chain)
+    status: varchar("status", { length: 20 }).default("PENDING").notNull(),
+
+    // Verification tracking (for oracle-verified events)
     isVerified: boolean("is_verified").default(false).notNull(),
     verifiedBy: varchar("verified_by", { length: 42 }), // Oracle address
     blockchainEventId: bigint("blockchain_event_id", { mode: "number" }),
@@ -80,11 +87,13 @@ export const evidence = pgTable(
     // Tracking
     createdBy: varchar("created_by", { length: 42 }).notNull(), // User wallet address
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    confirmedAt: timestamp("confirmed_at"),
     verifiedAt: timestamp("verified_at"),
   },
   (table) => [
     index("evidence_asset_id_idx").on(table.assetId),
     index("evidence_data_hash_idx").on(table.dataHash),
+    index("evidence_status_idx").on(table.status),
     foreignKey({
       columns: [table.assetId],
       foreignColumns: [assets.assetId],

@@ -1,203 +1,454 @@
 # VeriPass - Decentralized Asset Passport System
 
+A blockchain-based asset verification system that creates tamper-proof digital passports for physical assets. VeriPass tracks ownership history and lifecycle events on an immutable ledger using ERC-721 NFTs.
+
 ## Architecture Overview
 
-VeriPass is a blockchain-based asset verification system that creates tamper-proof digital passports for physical assets. The system tracks ownership history and lifecycle events on an append-only ledger.
+```
+                          SYSTEM ARCHITECTURE
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              USER INTERFACE                                  │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │                     Frontend (React + Vite)                            │  │
+│  │  • Wallet Connection (RainbowKit)  • Asset Management UI               │  │
+│  │  • Verification Display            • Event Timeline                    │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────┬──────────────────────────────────────────┘
+                                   │
+         ┌─────────────────────────┼─────────────────────────┐
+         │                         │                         │
+         ▼                         ▼                         ▼
+┌─────────────────┐    ┌─────────────────────┐    ┌─────────────────┐
+│    Backend      │    │     Blockchain      │    │     Oracle      │
+│   (Hono.js)     │    │    (Hardhat/EVM)    │    │   (Scheduled)   │
+│                 │    │                     │    │                 │
+│ • JWT Auth      │    │ • AssetPassport     │    │ • Verification  │
+│ • Metadata API  │    │   (ERC-721)         │    │   Processing    │
+│ • Evidence API  │    │ • EventRegistry     │    │ • Event Submit  │
+│ • PostgreSQL    │    │   (Append-only)     │    │                 │
+└────────┬────────┘    └──────────┬──────────┘    └────────┬────────┘
+         │                        │                        │
+         └────────────────────────┼────────────────────────┘
+                                  ▼
+                    ┌─────────────────────────┐
+                    │   shared/ (ABIs +       │
+                    │   Contract Addresses)   │
+                    └─────────────────────────┘
+```
+
+## Core Features
+
+### 1. Asset Minting
 
 ```
-                                    ARCHITECTURE DIAGRAM
-    
-    +-------------------+     +-------------------+     +-------------------+
-    |     Frontend      |     |      Oracle       |     |      Backend      |
-    |   (Vite + React)  |     |    (Node.js)      |     |     (Express)     |
-    +--------+----------+     +--------+----------+     +--------+----------+
-             |                         |                         |
-             |    reads ABI/addresses  |                         |
-             +------------+------------+                         |
-                          |                                      |
-                          v                                      |
-                 +--------+----------+                           |
-                 |      shared/      |                           |
-                 |  (ABI + Addresses)|<--------------------------+
-                 +--------+----------+
-                          ^
-                          | exports after deploy
-                          |
-             +------------+------------+
-             |       Contracts         |
-             |       (Hardhat)         |
-             +-------------------------+
+User                    Frontend                 Backend                  Blockchain
+  │                        │                        │                        │
+  │  Fill mint form        │                        │                        │
+  │───────────────────────>│                        │                        │
+  │                        │  POST /api/assets      │                        │
+  │                        │  {manufacturer, model} │                        │
+  │                        │───────────────────────>│                        │
+  │                        │                        │  Store metadata        │
+  │                        │                        │  Generate keccak256    │
+  │                        │     { dataHash }       │  hash                  │
+  │                        │<───────────────────────│                        │
+  │                        │                        │                        │
+  │                        │  mintPassport(recipient, dataHash)              │
+  │                        │────────────────────────────────────────────────>│
+  │                        │                        │                        │
+  │                        │                        │     tokenId, txHash    │
+  │                        │<────────────────────────────────────────────────│
+  │   Success + Token ID   │                        │                        │
+  │<───────────────────────│                        │                        │
+```
+
+### 2. Asset Verification
+
+```
+User                    Frontend                 Backend                  Blockchain
+  │                        │                        │                        │
+  │  View passport         │                        │                        │
+  │───────────────────────>│                        │                        │
+  │                        │  getAssetInfo(tokenId)                          │
+  │                        │────────────────────────────────────────────────>│
+  │                        │                        │      { metadataHash }  │
+  │                        │<────────────────────────────────────────────────│
+  │                        │                        │                        │
+  │                        │  GET /api/assets/by-hash/:hash                  │
+  │                        │───────────────────────>│                        │
+  │                        │    { full metadata }   │                        │
+  │                        │<───────────────────────│                        │
+  │                        │                        │                        │
+  │                        │  Compare hashes        │                        │
+  │                        │  onChainHash === computed(metadata)             │
+  │                        │                        │                        │
+  │   Display badge:       │                        │                        │
+  │   ✓ Verified (match)   │                        │                        │
+  │   ✗ Mismatch           │                        │                        │
+  │<───────────────────────│                        │                        │
+```
+
+### 3. Oracle Verification
+
+```
+User                    Frontend                 Backend                   Oracle                  Blockchain
+  │                        │                        │                        │                        │
+  │  Request verification  │                        │                        │                        │
+  │───────────────────────>│                        │                        │                        │
+  │                        │  POST /api/verification-requests               │                        │
+  │                        │───────────────────────>│                        │                        │
+  │                        │     { requestId }      │  Queue request         │                        │
+  │                        │<───────────────────────│                        │                        │
+  │   Pending status       │                        │                        │                        │
+  │<───────────────────────│                        │                        │                        │
+  │                        │                        │                        │                        │
+  │                        │                        │  Poll pending requests │                        │
+  │                        │                        │<───────────────────────│                        │
+  │                        │                        │                        │                        │
+  │                        │                        │                        │  Process & verify      │
+  │                        │                        │                        │                        │
+  │                        │                        │                        │  submitEvent(assetId,  │
+  │                        │                        │                        │  eventType, dataHash)  │
+  │                        │                        │                        │───────────────────────>│
+  │                        │                        │                        │      { txHash }        │
+  │                        │                        │                        │<───────────────────────│
+  │                        │                        │                        │                        │
+  │                        │                        │  Update status         │                        │
+  │                        │                        │<───────────────────────│                        │
+  │                        │                        │                        │                        │
+  │  View verified event in timeline               │                        │                        │
+  │<───────────────────────────────────────────────────────────────────────────────────────────────────│
 ```
 
 ## Folder Structure
 
 ```
 veripass/
-├── contracts/          # Hardhat project - Smart contract development
-├── frontend/           # Vite + React - User interface
-├── oracle/             # Node.js - External data verification
-├── backend/            # Express - Stateless API endpoints
-├── shared/             # Cross-layer artifacts (ABI, addresses)
-│   ├── abi/            # Contract ABIs (auto-generated)
-│   └── addresses.json  # Deployed contract addresses
+├── contracts/          # Hardhat + Solidity smart contracts
+│   ├── contracts/      # Solidity source files
+│   ├── scripts/        # Deployment and utility scripts
+│   └── test/           # Contract tests
+├── frontend/           # Vite + React SPA
+│   ├── src/
+│   │   ├── components/ # UI components
+│   │   ├── hooks/      # React hooks (API + contracts)
+│   │   ├── lib/        # Utilities (API client, animations)
+│   │   ├── pages/      # Route pages
+│   │   ├── providers/  # Context providers
+│   │   └── types/      # TypeScript types
+│   └── public/         # Static assets
+├── backend/            # Hono.js API server
+│   ├── src/
+│   │   ├── routes/     # API routes
+│   │   ├── services/   # Business logic
+│   │   └── db/         # Database (Drizzle ORM)
+│   └── oracle/         # Oracle worker
+├── shared/             # Cross-layer artifacts
+│   └── abi/            # Contract ABIs + addresses
 └── README.md           # This file
 ```
 
-## Developer Responsibilities
+## Quick Start
 
-| Developer | Package     | Responsibility                                      |
-|-----------|-------------|-----------------------------------------------------|
-| Dev A     | contracts/  | Smart contract logic, deployment, ABI generation   |
-| Dev B     | frontend/   | UI components, wallet integration, contract calls  |
-| Dev C     | oracle/     | External data fetching, verified event submission  |
-| Dev C     | backend/    | API endpoints, off-chain data management           |
+### Prerequisites
 
-## Parallel Development Workflow
+- Node.js 20+ or Bun
+- PostgreSQL 14+
+- MetaMask or compatible Web3 wallet
+- Git
 
-### Phase 1: Interface Definition (Day 1)
+### 1. Clone and Install
 
-Dev A defines contract interfaces and freezes function signatures. Other developers can begin implementation using placeholder ABIs.
+```bash
+git clone <repository-url>
+cd veripass
 
-### Phase 2: Parallel Implementation (Day 2-N)
+# Install all dependencies
+cd contracts && bun install && cd ..
+cd backend && bun install && cd ..
+cd frontend && bun install && cd ..
+```
 
-All developers work independently:
+### 2. Start Local Blockchain
 
-- **Dev A**: Implements contract logic, writes tests, prepares deployment
-- **Dev B**: Builds UI components, integrates wallet, mocks contract calls
-- **Dev C**: Implements oracle data fetching, backend API endpoints
+```bash
+# Terminal 1: Start Hardhat node
+cd contracts
+bun hardhat node
+```
 
-### Phase 3: Integration (Final Day)
+This starts a local Ethereum node at `http://127.0.0.1:8545` with Chain ID `31337`.
 
-Dev A deploys contracts and exports ABIs to shared/. Frontend and Oracle update their imports.
+### 3. Deploy Contracts
+
+```bash
+# Terminal 2: Deploy contracts
+cd contracts
+bun hardhat run scripts/deploy.ts --network localhost
+bun hardhat run scripts/export-abi.ts  # Export ABIs to shared/
+```
+
+### 4. Configure MetaMask
+
+#### Add Hardhat Network
+
+1. Open MetaMask
+2. Click network dropdown -> "Add Network" -> "Add a network manually"
+3. Enter these details:
+
+| Field | Value |
+|-------|-------|
+| Network Name | Hardhat Local |
+| New RPC URL | http://127.0.0.1:8545 |
+| Chain ID | 31337 |
+| Currency Symbol | ETH |
+| Block Explorer URL | (leave empty) |
+
+#### Import Test Account
+
+Hardhat provides pre-funded test accounts. Import Account #0:
+
+```
+Address:     0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+Balance:     10000 ETH
+```
+
+**Warning**: This is a publicly known test key. Never use it for real funds.
+
+### 5. Setup Database
+
+```bash
+# Ensure PostgreSQL is running
+# Create database
+createdb veripass
+
+# Terminal 3: Run migrations
+cd backend
+cp .env.example .env
+# Edit .env with your database credentials
+bun run db:push
+bun run db:seed  # Optional: seed test data
+```
+
+### 6. Start Backend
+
+```bash
+# Terminal 3 (continued)
+cd backend
+bun run dev
+```
+
+Backend runs at `http://localhost:3000`.
+
+### 7. Start Frontend
+
+```bash
+# Terminal 4
+cd frontend
+cp .env.example .env
+bun run dev
+```
+
+Frontend runs at `http://localhost:5173`.
+
+### 8. Test the System
+
+1. Open `http://localhost:5173` in your browser
+2. Connect MetaMask (use Hardhat Local network)
+3. Click "Sign In" to authenticate with the backend
+4. Navigate to "Mint" to create your first passport
+5. View your passport and verify the data integrity
+
+## Environment Configuration
+
+### contracts/.env
+
+```bash
+POLYGON_AMOY_RPC=https://rpc-amoy.polygon.technology
+SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
+DEPLOYER_PRIVATE_KEY=your_private_key_here
+```
+
+### backend/.env
+
+```bash
+PORT=3000
+DATABASE_URL=postgresql://user:password@localhost:5432/veripass
+JWT_SECRET=your_jwt_secret_here
+ORACLE_PRIVATE_KEY=your_oracle_wallet_key
+RPC_URL=http://127.0.0.1:8545
+```
+
+### frontend/.env
+
+```bash
+VITE_API_URL=http://localhost:3000
+VITE_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+```
+
+## Technology Stack
+
+| Layer | Technologies |
+|-------|-------------|
+| **Smart Contracts** | Solidity 0.8.28, Hardhat, OpenZeppelin 5.x, TypeChain |
+| **Frontend** | React 19, Vite 7, wagmi 3.1, RainbowKit 2.2, TanStack Query 5, Framer Motion 12, Tailwind CSS 4.1 |
+| **Backend** | Hono.js, Drizzle ORM, PostgreSQL, JWT Auth |
+| **Shared** | TypeScript, Auto-generated ABIs |
+
+## Smart Contracts
+
+### AssetPassport (ERC-721)
+
+NFT representing a unique digital passport for a physical asset.
+
+**Key Functions:**
+- `mintPassport(address to, bytes32 metadataHash)` - Mint new passport
+- `getAssetInfo(uint256 tokenId)` - Get asset metadata hash
+- `totalSupply()` - Get total minted passports
+
+### EventRegistry (Append-Only)
+
+Immutable ledger for asset lifecycle events.
+
+**Key Functions:**
+- `recordEvent(uint256 assetId, uint8 eventType, bytes32 dataHash)` - Record event
+- `submitOracleEvent(uint256 assetId, uint8 eventType, bytes32 dataHash)` - Oracle-verified event
+- `getAssetEvents(uint256 assetId)` - Get all events for an asset
+
+**Event Types:**
+- 0: MAINTENANCE
+- 1: OWNERSHIP_TRANSFER
+- 2: CERTIFICATION
+- 3: SERVICE_RECORD
+- 4: VERIFICATION
+
+## API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/nonce` | Get signing nonce |
+| POST | `/api/auth/verify` | Verify signature, get JWT |
+| GET | `/api/auth/me` | Get current user |
+
+### Assets
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/assets` | Create asset metadata |
+| GET | `/api/assets/:id` | Get asset by ID |
+| GET | `/api/assets/by-hash/:hash` | Get asset by data hash |
+
+### Evidence
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/evidence` | Create evidence record |
+| GET | `/api/evidence/asset/:assetId` | Get evidence for asset |
+
+### Verification
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/verification-requests` | Request oracle verification |
+| GET | `/api/verification-requests/:id` | Get request status |
+
+## Graceful Degradation
+
+The frontend operates in "offline mode" when the backend is unavailable:
+
+| Feature | Online Mode | Offline Mode |
+|---------|------------|--------------|
+| View passports | Full metadata display | Hash only |
+| Mint passports | Structured form | Legacy JSON input |
+| Record events | With evidence storage | Direct to blockchain |
+| Verification | Full hash comparison | Disabled |
+
+## Development Commands
+
+### Contracts
+
+```bash
+cd contracts
+bun hardhat compile          # Compile contracts
+bun hardhat test             # Run tests
+bun hardhat node             # Start local blockchain
+bun hardhat run scripts/deploy.ts --network localhost
+```
+
+### Backend
+
+```bash
+cd backend
+bun run dev                  # Start dev server
+bun run db:push              # Push schema to database
+bun run db:seed              # Seed database
+bun run oracle               # Run oracle worker
+```
+
+### Frontend
+
+```bash
+cd frontend
+bun run dev                  # Start dev server
+bun run build                # Production build
+bun run lint                 # Run ESLint
+bun run preview              # Preview production build
+```
 
 ## Cross-Layer Communication Rules
 
-### Rule 1: Single Source of Truth
-
-The `shared/` directory is the ONLY source for contract interfaces:
-
-- **ABIs**: `shared/abi/*.json` - Generated by Hardhat compilation
-- **Addresses**: `shared/addresses.json` - Generated by deploy script
-
-### Rule 2: No Manual Copying
-
-Never manually copy ABI files between directories. The deploy script (`contracts/scripts/deploy.ts`) automatically exports artifacts to `shared/`.
-
-### Rule 3: Contract Freeze Before Integration
-
-Before integration phase:
-
-1. Dev A freezes contract interfaces (no signature changes allowed)
-2. Dev A runs deployment to testnet
-3. Dev A executes export script to populate `shared/`
-4. Dev B and Dev C pull latest `shared/` and integrate
-
-### Rule 4: No Cross-Folder Imports (Except shared/)
-
-Each package is independent. The ONLY allowed cross-package import is from `shared/`.
+1. **Single Source of Truth**: The `shared/` directory is the ONLY source for contract interfaces
+2. **No Manual Copying**: Deploy script automatically exports ABIs to `shared/`
+3. **No Cross-Folder Imports**: Only `shared/` can be imported by other packages
 
 ```
 ALLOWED:
   frontend/ -> shared/
-  oracle/   -> shared/
   backend/  -> shared/
 
 FORBIDDEN:
   frontend/ -> contracts/
-  oracle/   -> frontend/
-  backend/  -> oracle/
+  backend/  -> frontend/
 ```
 
-## Getting Started
+## Testing Scenarios
 
-### Prerequisites
+### Full Mint Flow
+1. Connect wallet
+2. Sign in to backend
+3. Fill mint form with asset details
+4. Submit -> Backend stores metadata, returns hash
+5. Confirm transaction -> Contract mints NFT
+6. View passport with verification badge
 
-- Node.js v18 or higher
-- npm v9 or higher
-- Git
+### Verification Request Flow
+1. Navigate to owned passport
+2. Click "Request Verification"
+3. Select verification type
+4. Submit request
+5. Oracle processes and submits to blockchain
+6. View verified event in timeline
 
-### For Dev A (Contracts)
-
-```bash
-cd contracts
-npm install
-cp .env.example .env
-# Edit .env with your configuration
-npx hardhat compile
-npx hardhat test
-```
-
-### For Dev B (Frontend)
-
-```bash
-cd frontend
-npm install
-cp .env.example .env
-npm run dev
-```
-
-### For Dev C (Oracle)
-
-```bash
-cd oracle
-npm install
-cp .env.example .env
-npm run dev
-```
-
-### For Dev C (Backend)
-
-```bash
-cd backend
-npm install
-cp .env.example .env
-npm run dev
-```
-
-## Environment Configuration
-
-Each package has its own `.env.example` file. Copy it to `.env` and configure:
-
-- **contracts/**: RPC URLs, deployer private key, Etherscan API key
-- **frontend/**: Wallet connect project ID, API endpoints
-- **oracle/**: Oracle wallet private key, RPC URL, external API keys
-- **backend/**: Port, CORS origins
-
-IMPORTANT: Never commit `.env` files. They are gitignored by default.
-
-## Technology Stack
-
-| Layer     | Technology           | Purpose                              |
-|-----------|----------------------|--------------------------------------|
-| Contracts | Solidity + Hardhat   | On-chain logic and state             |
-| Frontend  | React + Vite         | User interface and wallet integration|
-| Oracle    | Node.js + TypeScript | External data verification           |
-| Backend   | Express + TypeScript | Stateless API and off-chain queries  |
-
-## Contract Overview
-
-### AssetPassport (ERC-721)
-
-Represents a unique digital passport for a physical asset. Each token contains:
-
-- Asset metadata (manufacturer, model, serial number)
-- Current owner
-- Link to event history
-
-### EventRegistry (Append-Only Ledger)
-
-Records lifecycle events for each asset:
-
-- Ownership transfers
-- Maintenance records
-- Verification events from oracle
-- Warranty claims
-
-Events are immutable once recorded (append-only pattern).
+### Degraded Mode Testing
+1. Stop backend server
+2. Refresh frontend
+3. Verify "Offline Mode" indicator appears
+4. Test minting with legacy JSON form
+5. Verify blockchain-only features still work
+6. Restart backend and verify recovery
 
 ## Developer Mapping
 
-In this case, <br/>
-Irfan acts as Developer B <br/>
-Elbert acts as Developer A <br/>
-Dewo acts as Developer C
+| Developer | Package | Responsibility |
+|-----------|---------|----------------|
+| Dev A (Elbert) | contracts/ | Smart contract logic, deployment, ABI generation |
+| Dev B (Irfan) | frontend/ | UI components, wallet integration, contract calls |
+| Dev C (Dewo) | backend/, oracle/ | API endpoints, off-chain data, oracle verification |
+
+## License
+
+MIT

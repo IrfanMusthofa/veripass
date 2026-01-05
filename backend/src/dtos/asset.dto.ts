@@ -12,6 +12,11 @@ export const createAssetSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const updateMintStatusSchema = z.object({
+  status: z.enum(["MINTED", "FAILED"]),
+  txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
+});
+
 export const assetIdParamSchema = z.object({
   assetId: z.coerce.number().int().positive(),
 });
@@ -21,6 +26,7 @@ export const hashParamSchema = z.object({
 });
 
 export type CreateAssetInput = z.infer<typeof createAssetSchema>;
+export type UpdateMintStatusInput = z.infer<typeof updateMintStatusSchema>;
 export type AssetIdParam = z.infer<typeof assetIdParamSchema>;
 export type HashParam = z.infer<typeof hashParamSchema>;
 
@@ -35,8 +41,11 @@ export interface AssetResponse {
   description: string | null;
   images: string[];
   metadata: Record<string, unknown> | null;
+  mintStatus: string;
+  txHash: string | null;
   createdBy: string;
   createdAt: string;
+  mintedAt: string | null;
 }
 
 export function formatAssetResponse(asset: Asset): AssetResponse {
@@ -51,7 +60,10 @@ export function formatAssetResponse(asset: Asset): AssetResponse {
     description: asset.description,
     images: (asset.images as string[]) || [],
     metadata: asset.metadata as Record<string, unknown> | null,
+    mintStatus: asset.mintStatus,
+    txHash: asset.txHash,
     createdBy: asset.createdBy,
     createdAt: asset.createdAt.toISOString(),
+    mintedAt: asset.mintedAt?.toISOString() || null,
   };
 }

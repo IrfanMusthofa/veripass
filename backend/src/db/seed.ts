@@ -21,34 +21,10 @@ async function seed() {
     },
   ]).onConflictDoNothing();
 
-  // Create a sample asset (required for service records FK)
-  const assetData = {
-    manufacturer: "Rolex",
-    model: "Submariner Date 126610LN",
-    serialNumber: "M123456789",
-    manufacturedDate: "2023-06-15",
-    description: "Black dial and bezel, Oystersteel case",
-  };
-
-  const dataHash = calculateHash(assetData);
-
-  await db.insert(assets).values({
-    assetId: 1,
-    dataHash,
-    manufacturer: assetData.manufacturer,
-    model: assetData.model,
-    serialNumber: assetData.serialNumber,
-    manufacturedDate: assetData.manufacturedDate,
-    description: assetData.description,
-    images: [],
-    metadata: null,
-    createdBy: "0x0000000000000000000000000000000000000000", // System/seed address
-  }).onConflictDoNothing();
-
   // Seed example service record
   await db.insert(serviceRecords).values({
     recordId: "SVC-2024-001",
-    assetId: 1,
+    assetId: 3,
     providerId: "rolex-service-jakarta",
     serviceType: "ROUTINE_MAINTENANCE",
     serviceDate: "2024-12-01",

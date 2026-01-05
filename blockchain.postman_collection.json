@@ -1,0 +1,1338 @@
+{
+	"info": {
+		"_postman_id": "2ff2e1e1-e37d-41d3-ba25-3833ddeb9b33",
+		"name": "blockchain",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25034937"
+	},
+	"item": [
+		{
+			"name": "/health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/api/auth/nonce",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"address\": \"0xe94799c1e9901bc7d5347aa8e521b4be7f2d018b\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/auth/nonce",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"auth",
+						"nonce"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"address\": \"0xe94799c1e9901bc7d5347aa8e521b4be7f2d018b\"\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/nonce",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"nonce"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "143"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 13:56:56 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Nonce generated successfully\",\n    \"data\": {\n        \"nonce\": \"0x0a3672dcb8006d98af4a629bf942e2ea20e42c9a9624f41be934c3e9dd5c4714\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/auth/verify",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"address\": \"0xE94799c1E9901BC7D5347aA8e521B4Be7f2D018b\",\n    \"message\": \"Sign this message to authenticate with VeriPass\\n\\nNonce: 0x912dd7cf40dc9e8c817580ad8aa8f4a02cc29a6514ae214921d09d469f0d045b\\nTimestamp: 2026-01-03T13:52:21.812Z\",\n    \"signature\": \"0x96323442e0a090bb1edef80d8e3b5555e24ad59e8438c9f29268443accb02eab6d3c121f3613fe396db442100e280716de88ad87b91dc1b91f3fc3649416d4201b\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/auth/verify",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"auth",
+						"verify"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"address\": \"0xE94799c1E9901BC7D5347aA8e521B4Be7f2D018b\",\n    \"message\": \"Sign this message to authenticate with VeriPass\\n\\nNonce: 0x912dd7cf40dc9e8c817580ad8aa8f4a02cc29a6514ae214921d09d469f0d045b\\nTimestamp: 2026-01-03T13:52:21.812Z\",\n    \"signature\": \"0x96323442e0a090bb1edef80d8e3b5555e24ad59e8438c9f29268443accb02eab6d3c121f3613fe396db442100e280716de88ad87b91dc1b91f3fc3649416d4201b\"\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/verify",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"verify"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "308"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 13:52:49 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Authentication successful\",\n    \"data\": {\n        \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHhlOTQ3OTljMWU5OTAxYmM3ZDUzNDdhYThlNTIxYjRiZTdmMmQwMThiIiwiZXhwIjoxNzY4MDUzMTY5fQ.aYu1ytNpwnaq2EZ7VfWQfNMPYxEC5HK4mpf7Uogvbig\",\n        \"address\": \"0xe94799c1e9901bc7d5347aa8e521b4be7f2d018b\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/auth/me",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHhlOTQ3OTljMWU5OTAxYmM3ZDUzNDdhYThlNTIxYjRiZTdmMmQwMThiIiwiZXhwIjoxNzY4MDUzMTY5fQ.aYu1ytNpwnaq2EZ7VfWQfNMPYxEC5HK4mpf7Uogvbig",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/auth/me",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"auth",
+						"me"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/auth/me",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "120"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 13:56:42 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"User retrieved successfully\",\n    \"data\": {\n        \"address\": \"0xe94799c1e9901bc7d5347aa8e521b4be7f2d018b\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/assets",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHhlOTQ3OTljMWU5OTAxYmM3ZDUzNDdhYThlNTIxYjRiZTdmMmQwMThiIiwiZXhwIjoxNzY4MDUzMTY5fQ.aYu1ytNpwnaq2EZ7VfWQfNMPYxEC5HK4mpf7Uogvbig",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"assetId\": 12345,\n    \"manufacturer\": \"Tesla Inc.\",\n    \"model\": \"Model S\",\n    \"serialNumber\": \"5YJ3E1EA8KF123456\",\n    \"manufacturedDate\": \"2024-01-15\",\n    \"description\": \"Electric Vehicle - Long Range\",\n    \"images\": [\n      \"https://example.com/images/tesla-model-s-front.jpg\",\n      \"https://example.com/images/tesla-model-s-side.jpg\"\n    ],\n    \"metadata\": {\n      \"color\": \"Midnight Silver Metallic\",\n      \"batteryCapacity\": \"100 kWh\",\n      \"range\": \"405 miles\"\n    }\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/assets",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"assets"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "201",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"assetId\": 12345,\n    \"manufacturer\": \"Tesla Inc.\",\n    \"model\": \"Model S\",\n    \"serialNumber\": \"5YJ3E1EA8KF123456\",\n    \"manufacturedDate\": \"2024-01-15\",\n    \"description\": \"Electric Vehicle - Long Range\",\n    \"images\": [\n      \"https://example.com/images/tesla-model-s-front.jpg\",\n      \"https://example.com/images/tesla-model-s-side.jpg\"\n    ],\n    \"metadata\": {\n      \"color\": \"Midnight Silver Metallic\",\n      \"batteryCapacity\": \"100 kWh\",\n      \"range\": \"405 miles\"\n    }\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/assets",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"assets"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "577"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 13:54:05 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Asset created successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"assetId\": 12345,\n        \"dataHash\": \"0x2ca92466d292b3ea93d944d20cc64f99837f377df80bb36c4b991a834e4f6ef4\",\n        \"manufacturer\": \"Tesla Inc.\",\n        \"model\": \"Model S\",\n        \"serialNumber\": \"5YJ3E1EA8KF123456\",\n        \"manufacturedDate\": \"2024-01-15\",\n        \"description\": \"Electric Vehicle - Long Range\",\n        \"images\": [\n            \"https://example.com/images/tesla-model-s-front.jpg\",\n            \"https://example.com/images/tesla-model-s-side.jpg\"\n        ],\n        \"metadata\": {\n            \"color\": \"Midnight Silver Metallic\",\n            \"range\": \"405 miles\",\n            \"batteryCapacity\": \"100 kWh\"\n        },\n        \"createdAt\": \"2026-01-03T13:54:05.975Z\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/assets/:assetId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/assets/:assetId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"assets",
+						":assetId"
+					],
+					"variable": [
+						{
+							"key": "assetId",
+							"value": "12345"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/assets/:assetId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"assets",
+								":assetId"
+							],
+							"variable": [
+								{
+									"key": "assetId",
+									"value": "12345"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "579"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 13:54:43 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Asset retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"assetId\": 12345,\n        \"dataHash\": \"0x2ca92466d292b3ea93d944d20cc64f99837f377df80bb36c4b991a834e4f6ef4\",\n        \"manufacturer\": \"Tesla Inc.\",\n        \"model\": \"Model S\",\n        \"serialNumber\": \"5YJ3E1EA8KF123456\",\n        \"manufacturedDate\": \"2024-01-15\",\n        \"description\": \"Electric Vehicle - Long Range\",\n        \"images\": [\n            \"https://example.com/images/tesla-model-s-front.jpg\",\n            \"https://example.com/images/tesla-model-s-side.jpg\"\n        ],\n        \"metadata\": {\n            \"color\": \"Midnight Silver Metallic\",\n            \"range\": \"405 miles\",\n            \"batteryCapacity\": \"100 kWh\"\n        },\n        \"createdAt\": \"2026-01-03T13:54:05.975Z\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/assets/by-hash/:hashId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/assets/by-hash/:hashId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"assets",
+						"by-hash",
+						":hashId"
+					],
+					"variable": [
+						{
+							"key": "hashId",
+							"value": "0x2ca92466d292b3ea93d944d20cc64f99837f377df80bb36c4b991a834e4f6ef4"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/assets/by-hash/:hashId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"assets",
+								"by-hash",
+								":hashId"
+							],
+							"variable": [
+								{
+									"key": "hashId",
+									"value": "0x2ca92466d292b3ea93d944d20cc64f99837f377df80bb36c4b991a834e4f6ef4"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "579"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 13:55:02 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Asset retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"assetId\": 12345,\n        \"dataHash\": \"0x2ca92466d292b3ea93d944d20cc64f99837f377df80bb36c4b991a834e4f6ef4\",\n        \"manufacturer\": \"Tesla Inc.\",\n        \"model\": \"Model S\",\n        \"serialNumber\": \"5YJ3E1EA8KF123456\",\n        \"manufacturedDate\": \"2024-01-15\",\n        \"description\": \"Electric Vehicle - Long Range\",\n        \"images\": [\n            \"https://example.com/images/tesla-model-s-front.jpg\",\n            \"https://example.com/images/tesla-model-s-side.jpg\"\n        ],\n        \"metadata\": {\n            \"color\": \"Midnight Silver Metallic\",\n            \"range\": \"405 miles\",\n            \"batteryCapacity\": \"100 kWh\"\n        },\n        \"createdAt\": \"2026-01-03T13:54:05.975Z\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/evidence",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHhlOTQ3OTljMWU5OTAxYmM3ZDUzNDdhYThlNTIxYjRiZTdmMmQwMThiIiwiZXhwIjoxNzY4MDUzMTY5fQ.aYu1ytNpwnaq2EZ7VfWQfNMPYxEC5HK4mpf7Uogvbig",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"assetId\": 12345,\n    \"eventType\": \"MAINTENANCE\",\n    \"eventDate\": \"2024-01-20\",\n    \"providerId\": \"PROVIDER-001\",\n    \"providerName\": \"Tesla Service Center - Downtown\",\n    \"description\": \"Regular maintenance service - 10,000 miles check\",\n    \"files\": [\n      {\n        \"url\": \"https://example.com/reports/service-report-001.pdf\",\n        \"type\": \"application/pdf\",\n        \"name\": \"Service Report\"\n      },\n      {\n        \"url\": \"https://example.com/photos/inspection-photo.jpg\",\n        \"type\": \"image/jpeg\",\n        \"name\": \"Inspection Photo\"\n      }\n    ],\n    \"metadata\": {\n      \"mileage\": 10000,\n      \"serviceType\": \"Regular Maintenance\",\n      \"technician\": \"John Doe\",\n      \"cost\": 299.99\n    }\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/evidence",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"evidence"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "201",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"assetId\": 12345,\n    \"eventType\": \"MAINTENANCE\",\n    \"eventDate\": \"2024-01-20\",\n    \"providerId\": \"PROVIDER-001\",\n    \"providerName\": \"Tesla Service Center - Downtown\",\n    \"description\": \"Regular maintenance service - 10,000 miles check\",\n    \"files\": [\n      {\n        \"url\": \"https://example.com/reports/service-report-001.pdf\",\n        \"type\": \"application/pdf\",\n        \"name\": \"Service Report\"\n      },\n      {\n        \"url\": \"https://example.com/photos/inspection-photo.jpg\",\n        \"type\": \"image/jpeg\",\n        \"name\": \"Inspection Photo\"\n      }\n    ],\n    \"metadata\": {\n      \"mileage\": 10000,\n      \"serviceType\": \"Regular Maintenance\",\n      \"technician\": \"John Doe\",\n      \"cost\": 299.99\n    }\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/evidence",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"evidence"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "823"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 13:55:50 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Evidence created successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"assetId\": 12345,\n        \"dataHash\": \"0x4bf3b5d08c9781a90e692201096f7ca8aac2ccc119264434c2244023302763c3\",\n        \"eventType\": \"MAINTENANCE\",\n        \"eventDate\": \"2024-01-20\",\n        \"providerId\": \"PROVIDER-001\",\n        \"providerName\": \"Tesla Service Center - Downtown\",\n        \"description\": \"Regular maintenance service - 10,000 miles check\",\n        \"files\": [\n            {\n                \"url\": \"https://example.com/reports/service-report-001.pdf\",\n                \"name\": \"Service Report\",\n                \"type\": \"application/pdf\"\n            },\n            {\n                \"url\": \"https://example.com/photos/inspection-photo.jpg\",\n                \"name\": \"Inspection Photo\",\n                \"type\": \"image/jpeg\"\n            }\n        ],\n        \"metadata\": {\n            \"cost\": 299.99,\n            \"mileage\": 10000,\n            \"technician\": \"John Doe\",\n            \"serviceType\": \"Regular Maintenance\"\n        },\n        \"isVerified\": false,\n        \"verifiedBy\": null,\n        \"blockchainEventId\": null,\n        \"txHash\": null,\n        \"createdAt\": \"2026-01-03T13:55:50.438Z\",\n        \"verifiedAt\": null\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/evidence/by-hash/:hashId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/evidence/by-hash/:hashId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"evidence",
+						"by-hash",
+						":hashId"
+					],
+					"variable": [
+						{
+							"key": "hashId",
+							"value": "0x4bf3b5d08c9781a90e692201096f7ca8aac2ccc119264434c2244023302763c3"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/evidence/by-hash/:hashId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"evidence",
+								"by-hash",
+								":hashId"
+							],
+							"variable": [
+								{
+									"key": "hashId",
+									"value": "0x4bf3b5d08c9781a90e692201096f7ca8aac2ccc119264434c2244023302763c3"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "825"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 13:57:15 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Evidence retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"assetId\": 12345,\n        \"dataHash\": \"0x4bf3b5d08c9781a90e692201096f7ca8aac2ccc119264434c2244023302763c3\",\n        \"eventType\": \"MAINTENANCE\",\n        \"eventDate\": \"2024-01-20\",\n        \"providerId\": \"PROVIDER-001\",\n        \"providerName\": \"Tesla Service Center - Downtown\",\n        \"description\": \"Regular maintenance service - 10,000 miles check\",\n        \"files\": [\n            {\n                \"url\": \"https://example.com/reports/service-report-001.pdf\",\n                \"name\": \"Service Report\",\n                \"type\": \"application/pdf\"\n            },\n            {\n                \"url\": \"https://example.com/photos/inspection-photo.jpg\",\n                \"name\": \"Inspection Photo\",\n                \"type\": \"image/jpeg\"\n            }\n        ],\n        \"metadata\": {\n            \"cost\": 299.99,\n            \"mileage\": 10000,\n            \"technician\": \"John Doe\",\n            \"serviceType\": \"Regular Maintenance\"\n        },\n        \"isVerified\": false,\n        \"verifiedBy\": null,\n        \"blockchainEventId\": null,\n        \"txHash\": null,\n        \"createdAt\": \"2026-01-03T13:55:50.438Z\",\n        \"verifiedAt\": null\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/evidence/asset/:assetId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/evidence/asset/:assetId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"evidence",
+						"asset",
+						":assetId"
+					],
+					"variable": [
+						{
+							"key": "assetId",
+							"value": "12345"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/evidence/asset/:assetId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"evidence",
+								"asset",
+								":assetId"
+							],
+							"variable": [
+								{
+									"key": "assetId",
+									"value": "12345"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "832"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 13:57:33 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Evidence list retrieved successfully\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"assetId\": 12345,\n            \"dataHash\": \"0x4bf3b5d08c9781a90e692201096f7ca8aac2ccc119264434c2244023302763c3\",\n            \"eventType\": \"MAINTENANCE\",\n            \"eventDate\": \"2024-01-20\",\n            \"providerId\": \"PROVIDER-001\",\n            \"providerName\": \"Tesla Service Center - Downtown\",\n            \"description\": \"Regular maintenance service - 10,000 miles check\",\n            \"files\": [\n                {\n                    \"url\": \"https://example.com/reports/service-report-001.pdf\",\n                    \"name\": \"Service Report\",\n                    \"type\": \"application/pdf\"\n                },\n                {\n                    \"url\": \"https://example.com/photos/inspection-photo.jpg\",\n                    \"name\": \"Inspection Photo\",\n                    \"type\": \"image/jpeg\"\n                }\n            ],\n            \"metadata\": {\n                \"cost\": 299.99,\n                \"mileage\": 10000,\n                \"technician\": \"John Doe\",\n                \"serviceType\": \"Regular Maintenance\"\n            },\n            \"isVerified\": false,\n            \"verifiedBy\": null,\n            \"blockchainEventId\": null,\n            \"txHash\": null,\n            \"createdAt\": \"2026-01-03T13:55:50.438Z\",\n            \"verifiedAt\": null\n        }\n    ]\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/verification-requests",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHhlOTQ3OTljMWU5OTAxYmM3ZDUzNDdhYThlNTIxYjRiZTdmMmQwMThiIiwiZXhwIjoxNzY4MDUzMTY5fQ.aYu1ytNpwnaq2EZ7VfWQfNMPYxEC5HK4mpf7Uogvbig",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"assetId\": 12345,\n    \"requestType\": \"SERVICE_VERIFICATION\",\n    \"providerId\": \"PROVIDER-001\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/verification-requests",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"verification-requests"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"assetId\": 12345,\n    \"requestType\": \"SERVICE_VERIFICATION\",\n    \"providerId\": \"PROVIDER-001\"\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/verification-requests",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"verification-requests"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "437"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 15:31:06 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Verification request created successfully\",\n    \"data\": {\n        \"id\": 2,\n        \"requestId\": \"VR-1767454266669-zppdwxjyc\",\n        \"assetId\": 12345,\n        \"requestType\": \"SERVICE_VERIFICATION\",\n        \"providerId\": \"PROVIDER-001\",\n        \"requestedBy\": \"0xe94799c1e9901bc7d5347aa8e521b4be7f2d018b\",\n        \"status\": \"PENDING\",\n        \"blockchainEventId\": null,\n        \"txHash\": null,\n        \"dataHash\": null,\n        \"evidenceId\": null,\n        \"errorMessage\": null,\n        \"createdAt\": \"2026-01-03T15:31:06.671Z\",\n        \"processedAt\": null\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/verification-requests/pending",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Oracle-Key",
+						"value": "your-oracle-api-key-at-least-32-characters-long"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/api/verification-requests/pending",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"verification-requests",
+						"pending"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Oracle-Key",
+								"value": "your-oracle-api-key-at-least-32-characters-long"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/verification-requests/pending",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"verification-requests",
+								"pending"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "797"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 15:32:42 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Pending requests retrieved successfully\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"requestId\": \"VR-1767454257209-r3du7t5g8\",\n            \"assetId\": 12345,\n            \"requestType\": \"SERVICE_VERIFICATION\",\n            \"providerId\": \"PROVIDER-001\",\n            \"requestedBy\": \"0xe94799c1e9901bc7d5347aa8e521b4be7f2d018b\",\n            \"status\": \"PENDING\",\n            \"blockchainEventId\": null,\n            \"txHash\": null,\n            \"dataHash\": null,\n            \"evidenceId\": null,\n            \"errorMessage\": null,\n            \"createdAt\": \"2026-01-03T15:30:57.210Z\",\n            \"processedAt\": null\n        },\n        {\n            \"id\": 2,\n            \"requestId\": \"VR-1767454266669-zppdwxjyc\",\n            \"assetId\": 12345,\n            \"requestType\": \"SERVICE_VERIFICATION\",\n            \"providerId\": \"PROVIDER-001\",\n            \"requestedBy\": \"0xe94799c1e9901bc7d5347aa8e521b4be7f2d018b\",\n            \"status\": \"PENDING\",\n            \"blockchainEventId\": null,\n            \"txHash\": null,\n            \"dataHash\": null,\n            \"evidenceId\": null,\n            \"errorMessage\": null,\n            \"createdAt\": \"2026-01-03T15:31:06.671Z\",\n            \"processedAt\": null\n        }\n    ]\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/verification-requests/:vrId",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "X-Oracle-Key",
+						"value": "your-oracle-api-key-at-least-32-characters-long"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\": \"COMPLETED\",\n    \"blockchainEventId\": 42,\n    \"txHash\": \"0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890\",\n    \"dataHash\": \"0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba\",\n    \"evidenceId\": 1\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/verification-requests/:vrId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"verification-requests",
+						":vrId"
+					],
+					"variable": [
+						{
+							"key": "vrId",
+							"value": "VR-1767454257209-r3du7t5g8"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Oracle-Key",
+								"value": "your-oracle-api-key-at-least-32-characters-long"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"COMPLETED\",\n    \"blockchainEventId\": 42,\n    \"txHash\": \"0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890\",\n    \"dataHash\": \"0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba\",\n    \"evidenceId\": 1\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/verification-requests/:vrId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"verification-requests",
+								":vrId"
+							],
+							"variable": [
+								{
+									"key": "vrId",
+									"value": "VR-1767454257209-r3du7t5g8"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "584"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 15:39:17 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Verification request updated successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"requestId\": \"VR-1767454257209-r3du7t5g8\",\n        \"assetId\": 12345,\n        \"requestType\": \"SERVICE_VERIFICATION\",\n        \"providerId\": \"PROVIDER-001\",\n        \"requestedBy\": \"0xe94799c1e9901bc7d5347aa8e521b4be7f2d018b\",\n        \"status\": \"COMPLETED\",\n        \"blockchainEventId\": 42,\n        \"txHash\": \"0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890\",\n        \"dataHash\": \"0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba\",\n        \"evidenceId\": 1,\n        \"errorMessage\": null,\n        \"createdAt\": \"2026-01-03T15:30:57.210Z\",\n        \"processedAt\": \"2026-01-03T15:39:17.721Z\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "/api/service-records/:serviceRecordId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/service-records/:assetId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"service-records",
+						":assetId"
+					],
+					"variable": [
+						{
+							"key": "assetId",
+							"value": "12345"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/service-records/:assetId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"service-records",
+								":assetId"
+							],
+							"variable": [
+								{
+									"key": "assetId",
+									"value": "12345"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "access-control-allow-credentials",
+							"value": "true"
+						},
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "vary",
+							"value": "Origin"
+						},
+						{
+							"key": "content-length",
+							"value": "77"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 03 Jan 2026 15:47:21 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Service records retrieved successfully\",\n    \"data\": []\n}"
+				}
+			]
+		}
+	]
+}
