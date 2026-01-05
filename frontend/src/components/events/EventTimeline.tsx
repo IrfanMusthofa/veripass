@@ -189,7 +189,7 @@ function EnrichedEventCard({ event, isLast }: { event: EnrichedEvent; isLast: bo
   const dotColor = getEventTypeColor(event.eventType);
 
   return (
-    <div className="relative pl-8 pb-6 last:pb-0">
+    <div className={`relative pl-8 ${evidence ? 'pb-8' : 'pb-6'} last:pb-0`}>
       {/* Colored vertical timeline line connecting events */}
       {!isLast && (
         <motion.div
@@ -232,39 +232,61 @@ function EnrichedEventCard({ event, isLast }: { event: EnrichedEvent; isLast: bo
         )}
       </motion.div>
 
-      <EventCard event={event} />
+      {/* White event card */}
+      <div className={evidence ? 'mb-0' : ''}>
+        <EventCard event={event} />
+      </div>
 
+      {/* Grey supplementary information box - visually grouped with white box */}
       {evidence && (
         <motion.div
-          className="mt-2 ml-0 p-3 bg-[var(--color-bg-secondary)] rounded-[var(--radius-md)]"
+          className="mt-3 p-4 bg-[var(--color-bg-secondary)] rounded-[var(--radius-md)] border-l-2 border-transparent hover:border-[var(--color-border-hover)] transition-colors duration-200"
+          style={{
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          }}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <div className="flex items-center gap-2 mb-2">
+          {/* Header with badges */}
+          <div className="flex items-center gap-2 mb-3">
             {evidence.isVerified && (
               <motion.span
-                className="text-[var(--font-size-xs)] px-2 py-0.5 rounded-full bg-[var(--color-accent-green-light)] text-[var(--color-accent-green)]"
+                className="inline-flex items-center gap-1 text-[var(--font-size-xs)] px-2.5 py-1 rounded-full bg-[var(--color-accent-green-light)] text-[var(--color-accent-green)] font-medium"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", delay: 0.3 }}
               >
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
                 Verified
               </motion.span>
             )}
             {evidence.providerName && (
-              <span className="text-[var(--font-size-xs)] text-[var(--color-text-muted)]">by {evidence.providerName}</span>
+              <span className="text-[var(--font-size-xs)] text-[var(--color-text-muted)] font-medium">
+                by {evidence.providerName}
+              </span>
             )}
           </div>
 
+          {/* Description */}
           {evidence.description && (
-            <p className="text-[var(--font-size-sm)] text-[var(--color-text-secondary)]">{evidence.description}</p>
+            <p className="text-[var(--font-size-sm)] text-[var(--color-text-secondary)] leading-relaxed mb-2">
+              {evidence.description}
+            </p>
           )}
 
+          {/* Transaction hash */}
           {evidence.txHash && (
-            <p className="text-[var(--font-size-xs)] font-mono text-[var(--color-text-muted)] mt-1">
-              Tx: {evidence.txHash.slice(0, 10)}...{evidence.txHash.slice(-8)}
-            </p>
+            <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
+              <div className="flex items-center gap-2">
+                <span className="text-[var(--font-size-xs)] text-[var(--color-text-muted)]">Transaction:</span>
+                <code className="text-[var(--font-size-xs)] font-mono text-[var(--color-text-secondary)] bg-white px-2 py-1 rounded">
+                  {evidence.txHash.slice(0, 10)}...{evidence.txHash.slice(-8)}
+                </code>
+              </div>
+            </div>
           )}
         </motion.div>
       )}
