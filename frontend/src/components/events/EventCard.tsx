@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Badge } from '@/components/common';
 import { truncateAddress, truncateHash, formatTimestamp, getEventTypeLabel, EVENT_TYPE_VARIANTS } from '@/lib';
 import type { LifecycleEvent } from '@/types';
@@ -10,49 +11,60 @@ export function EventCard({ event }: EventCardProps) {
   const variant = EVENT_TYPE_VARIANTS[event.eventType] || 'default';
 
   return (
-    <div className="relative pl-8 pb-6">
-      {/* Timeline dot */}
-      <div className="absolute left-0 top-1.5 w-6 h-6 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center">
-        <div className={`w-2.5 h-2.5 rounded-full ${event.eventType === 0 ? 'bg-blue-500' :
-            event.eventType === 1 ? 'bg-green-500' :
-              event.eventType === 2 ? 'bg-orange-500' :
-                event.eventType === 3 ? 'bg-purple-500' :
-                  'bg-gray-500'
-          }`} />
-      </div>
-
-      {/* Event content */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-        <div className="flex items-start justify-between mb-2">
-          <Badge variant={variant} size="sm">
-            {getEventTypeLabel(event.eventType)}
-          </Badge>
-          <span className="text-xs text-gray-500">
+    <div className="relative">
+      {/* Event content with smooth animation */}
+      <motion.div
+        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.15 }}
+      >
+        <div className="flex items-start justify-between mb-3">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <Badge variant={variant} size="sm">
+              {getEventTypeLabel(event.eventType)}
+            </Badge>
+          </motion.div>
+          <motion.span
+            className="text-xs text-gray-500"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.25 }}
+          >
             {formatTimestamp(Number(event.timestamp))}
-          </span>
+          </motion.span>
         </div>
 
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between">
+        <motion.div
+          className="space-y-2 text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
+          <div className="flex justify-between items-center">
             <span className="text-gray-500">Event ID</span>
-            <span className="font-mono text-gray-700">#{event.id?.toString()}</span>
+            <span className="font-mono text-gray-700 font-medium">#{event.id?.toString()}</span>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span className="text-gray-500">Submitter</span>
             <span className="font-mono text-gray-700">
               {truncateAddress(event.submitter)}
             </span>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span className="text-gray-500">Data Hash</span>
-            <span className="font-mono text-gray-700">
+            <span className="font-mono text-gray-700 text-xs">
               {truncateHash(event.dataHash)}
             </span>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

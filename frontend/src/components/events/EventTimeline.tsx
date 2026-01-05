@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useChainId } from 'wagmi';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardBody, CardHeader, Button } from '@/components/common';
 import { Skeleton } from '@/components/design-system';
 import { EventCard } from './EventCard';
@@ -18,6 +18,17 @@ interface EventTimelineProps {
 interface EnrichedEvent extends LifecycleEvent {
   evidence?: EvidenceResponse;
 }
+
+// Helper function to get event type color
+const getEventTypeColor = (eventType: number): string => {
+  switch (eventType) {
+    case 0: return 'bg-blue-500';
+    case 1: return 'bg-green-500';
+    case 2: return 'bg-orange-500';
+    case 3: return 'bg-purple-500';
+    default: return 'bg-gray-500';
+  }
+};
 
 export function EventTimeline({ assetId, showRecordButton, onRecordClick }: EventTimelineProps) {
   const chainId = useChainId();
@@ -80,9 +91,11 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
     }));
   }, [events, evidenceMap]);
 
-  const filteredEvents = useMemo(() => {
-    if (selectedType === null) return enrichedEvents;
-    return enrichedEvents.filter((e) => e.eventType === selectedType);
+  // Filter to only show verified events (with colored dots)
+  const verifiedEvents = useMemo(() => {
+    const verified = enrichedEvents.filter((e) => e.evidence?.isVerified);
+    if (selectedType === null) return verified;
+    return verified.filter((e) => e.eventType === selectedType);
   }, [enrichedEvents, selectedType]);
 
   const isLoading = isLoadingEvents || (isBackendAvailable && isLoadingEvidence);
@@ -93,9 +106,9 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
         <div className="flex items-center justify-between">
           <h3 className="text-[var(--font-size-lg)] font-semibold text-[var(--color-text-primary)]">
             Lifecycle Events
-            {events.length > 0 && (
+            {verifiedEvents.length > 0 && (
               <span className="ml-2 text-[var(--font-size-sm)] font-normal text-[var(--color-text-muted)]">
-                ({events.length})
+                ({verifiedEvents.length} verified)
               </span>
             )}
           </h3>
@@ -109,7 +122,7 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
       </CardHeader>
 
       <CardBody>
-        {events.length > 0 && (
+        {verifiedEvents.length > 0 && (
           <div className="mb-[var(--spacing-4)]">
             <EventTypeFilter selectedType={selectedType} onSelect={setSelectedType} />
           </div>
@@ -131,7 +144,7 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
           <div className="text-center py-8">
             <p className="text-[var(--color-accent-red)]">Failed to load events.</p>
           </div>
-        ) : filteredEvents.length === 0 ? (
+        ) : verifiedEvents.length === 0 ? (
           <div className="text-center py-8">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center">
               <svg className="w-6 h-6 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,16 +152,32 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
               </svg>
             </div>
             <p className="text-[var(--color-text-muted)]">
-              {events.length === 0 ? 'No events recorded for this asset yet.' : 'No events match the selected filter.'}
+              {events.length === 0 ? 'No events recorded for this asset yet.' : 'No verified events to display.'}
             </p>
           </div>
         ) : (
-          <div className="mt-[var(--spacing-4)] space-y-6">
-            {filteredEvents.map((event) => (
-              <motion.div key={event.dataHash} layout="position">
-                <EnrichedEventCard event={event} />
-              </motion.div>
-            ))}
+          <div className="mt-[var(--spacing-4)]">
+            <AnimatePresence mode="popLayout">
+              {verifiedEvents.map((event, index) => (
+                <motion.div
+                  key={event.dataHash}
+                  layout
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: index * 0.1,
+                    layout: { duration: 0.3 }
+                  }}
+                >
+                  <EnrichedEventCard
+                    event={event}
+                    isLast={index === verifiedEvents.length - 1}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </CardBody>
@@ -156,36 +185,73 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
   );
 }
 
-function EnrichedEventCard({ event }: { event: EnrichedEvent }) {
+function EnrichedEventCard({ event, isLast }: { event: EnrichedEvent; isLast: boolean }) {
   const evidence = event.evidence;
+  const dotColor = getEventTypeColor(event.eventType);
 
   return (
-    <div className="relative pl-8 pb-6">
-      {/* Timeline dot */}
-      <div
-        className={`
-          absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center
-          ${evidence?.isVerified ? 'bg-[var(--color-accent-green-light)]' : 'bg-[var(--color-bg-tertiary)]'}
-        `}
+    <div className="relative pl-8 pb-6 last:pb-0">
+      {/* Colored vertical timeline line connecting events */}
+      {!isLast && (
+        <motion.div
+          className={`absolute left-[11px] top-8 bottom-0 w-0.5 ${dotColor}`}
+          initial={{ scaleY: 0, originY: 0 }}
+          animate={{ scaleY: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        />
+      )}
+
+      {/* Colored timeline dot with verification checkmark */}
+      <motion.div
+        className={`absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center ${dotColor} shadow-md`}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 260,
+          damping: 20,
+          delay: 0.1
+        }}
       >
-        {evidence?.isVerified ? (
-          <svg className="w-3.5 h-3.5 text-[var(--color-accent-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        ) : (
-          <div className="w-2 h-2 rounded-full bg-[var(--color-text-muted)]" />
+        {evidence?.isVerified && (
+          <motion.svg
+            className="w-3.5 h-3.5 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <motion.path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M5 13l4 4L19 7"
+            />
+          </motion.svg>
         )}
-      </div>
+      </motion.div>
 
       <EventCard event={event} />
 
       {evidence && (
-        <div className="mt-2 ml-0 p-3 bg-[var(--color-bg-secondary)] rounded-[var(--radius-md)]">
+        <motion.div
+          className="mt-2 ml-0 p-3 bg-[var(--color-bg-secondary)] rounded-[var(--radius-md)]"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
           <div className="flex items-center gap-2 mb-2">
             {evidence.isVerified && (
-              <span className="text-[var(--font-size-xs)] px-2 py-0.5 rounded-full bg-[var(--color-accent-green-light)] text-[var(--color-accent-green)]">
+              <motion.span
+                className="text-[var(--font-size-xs)] px-2 py-0.5 rounded-full bg-[var(--color-accent-green-light)] text-[var(--color-accent-green)]"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.3 }}
+              >
                 Verified
-              </span>
+              </motion.span>
             )}
             {evidence.providerName && (
               <span className="text-[var(--font-size-xs)] text-[var(--color-text-muted)]">by {evidence.providerName}</span>
@@ -201,7 +267,7 @@ function EnrichedEventCard({ event }: { event: EnrichedEvent }) {
               Tx: {evidence.txHash.slice(0, 10)}...{evidence.txHash.slice(-8)}
             </p>
           )}
-        </div>
+        </motion.div>
       )}
     </div>
   );
