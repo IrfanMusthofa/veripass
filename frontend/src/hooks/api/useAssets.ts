@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { CreateAssetRequest, AssetResponse, ApiResponse } from '@/types/api';
+import type { CreateAssetRequest, UpdateMintStatusRequest, AssetResponse, ApiResponse } from '@/types/api';
 
 // Query key factory
 export const assetKeys = {
@@ -48,6 +48,22 @@ export function useCreateAsset() {
       // Pre-populate cache with new asset
       queryClient.setQueryData(assetKeys.byId(response.data.assetId), response);
       queryClient.setQueryData(assetKeys.byHash(response.data.dataHash), response);
+    },
+  });
+}
+
+// Update mint status mutation
+export function useUpdateMintStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ assetId, data }: { assetId: number; data: UpdateMintStatusRequest }) =>
+      api.updateMintStatus(assetId, data),
+    onSuccess: (response) => {
+      // Update cache with new status
+      queryClient.setQueryData(assetKeys.byId(response.data.assetId), response);
+      queryClient.setQueryData(assetKeys.byHash(response.data.dataHash), response);
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
     },
   });
 }

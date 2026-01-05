@@ -37,13 +37,19 @@ export const assets = pgTable(
     images: jsonb("images").$type<string[]>(), // Array of image URLs
     metadata: jsonb("metadata").$type<Record<string, unknown>>(), // Any extra fields
 
+    // Mint status: PENDING (waiting for tx), MINTED (confirmed), FAILED (tx failed/cancelled)
+    mintStatus: varchar("mint_status", { length: 20 }).default("PENDING").notNull(),
+    txHash: varchar("tx_hash", { length: 66 }), // Transaction hash when minted
+
     // Tracking
     createdBy: varchar("created_by", { length: 42 }).notNull(), // User wallet address
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    mintedAt: timestamp("minted_at"),
   },
   (table) => [
     index("asset_id_idx").on(table.assetId),
     index("data_hash_idx").on(table.dataHash),
+    index("mint_status_idx").on(table.mintStatus),
   ]
 );
 
