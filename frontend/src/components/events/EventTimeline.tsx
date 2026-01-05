@@ -91,11 +91,10 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
     }));
   }, [events, evidenceMap]);
 
-  // Filter to only show verified events (with colored dots)
-  const verifiedEvents = useMemo(() => {
-    const verified = enrichedEvents.filter((e) => e.evidence?.isVerified);
-    if (selectedType === null) return verified;
-    return verified.filter((e) => e.eventType === selectedType);
+  // Apply type filter if selected
+  const filteredEvents = useMemo(() => {
+    if (selectedType === null) return enrichedEvents;
+    return enrichedEvents.filter((e) => e.eventType === selectedType);
   }, [enrichedEvents, selectedType]);
 
   const isLoading = isLoadingEvents || (isBackendAvailable && isLoadingEvidence);
@@ -106,9 +105,9 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
         <div className="flex items-center justify-between">
           <h3 className="text-[var(--font-size-lg)] font-semibold text-[var(--color-text-primary)]">
             Lifecycle Events
-            {verifiedEvents.length > 0 && (
+            {filteredEvents.length > 0 && (
               <span className="ml-2 text-[var(--font-size-sm)] font-normal text-[var(--color-text-muted)]">
-                ({verifiedEvents.length} verified)
+                ({filteredEvents.length})
               </span>
             )}
           </h3>
@@ -122,7 +121,7 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
       </CardHeader>
 
       <CardBody>
-        {verifiedEvents.length > 0 && (
+        {filteredEvents.length > 0 && (
           <div className="mb-[var(--spacing-4)]">
             <EventTypeFilter selectedType={selectedType} onSelect={setSelectedType} />
           </div>
@@ -144,7 +143,7 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
           <div className="text-center py-8">
             <p className="text-[var(--color-accent-red)]">Failed to load events.</p>
           </div>
-        ) : verifiedEvents.length === 0 ? (
+        ) : filteredEvents.length === 0 ? (
           <div className="text-center py-8">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center">
               <svg className="w-6 h-6 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,13 +151,13 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
               </svg>
             </div>
             <p className="text-[var(--color-text-muted)]">
-              {events.length === 0 ? 'No events recorded for this asset yet.' : 'No verified events to display.'}
+              {events.length === 0 ? 'No events recorded for this asset yet.' : 'No events match the selected filter.'}
             </p>
           </div>
         ) : (
           <div className="mt-[var(--spacing-4)]">
             <AnimatePresence mode="popLayout">
-              {verifiedEvents.map((event, index) => (
+              {filteredEvents.map((event, index) => (
                 <motion.div
                   key={event.dataHash}
                   layout
@@ -167,13 +166,13 @@ export function EventTimeline({ assetId, showRecordButton, onRecordClick }: Even
                   exit={{ opacity: 0, x: 20 }}
                   transition={{
                     duration: 0.3,
-                    delay: index * 0.1,
+                    delay: index * 0.05,
                     layout: { duration: 0.3 }
                   }}
                 >
                   <EnrichedEventCard
                     event={event}
-                    isLast={index === verifiedEvents.length - 1}
+                    isLast={index === filteredEvents.length - 1}
                   />
                 </motion.div>
               ))}
