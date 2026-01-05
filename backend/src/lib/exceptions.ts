@@ -52,10 +52,3 @@ export class NotFoundException extends HttpException {
 export class ConflictException extends HttpException {
   readonly statusCode = 409;
 }
-
-/**
- * 500 Internal Server Error
- */
-export class InternalServerException extends HttpException {
-  readonly statusCode = 500;
-}

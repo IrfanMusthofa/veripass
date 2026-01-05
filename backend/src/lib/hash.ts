@@ -49,15 +49,3 @@ export function calculateHash(data: unknown): string {
 
   return hash;
 }
-
-/**
- * Verify that a hash matches the provided data
- *
- * @param data - Original data
- * @param expectedHash - Expected hash value
- * @returns True if hash matches, false otherwise
- */
-export function verifyHash(data: unknown, expectedHash: string): boolean {
-  const calculated = calculateHash(data);
-  return calculated.toLowerCase() === expectedHash.toLowerCase();
-}

@@ -24,15 +24,4 @@ const addresses: Record<string, ContractAddresses> = {
   },
 };
 
-export function getAddresses(network: string): ContractAddresses {
-  const addr = addresses[network];
-  if (!addr) {
-    throw new Error(`Unknown network: ${network}. Available: ${Object.keys(addresses).join(", ")}`);
-  }
-  if (!addr.assetPassport || !addr.eventRegistry) {
-    throw new Error(`Contracts not deployed on ${network}. Update shared/abi/addresses.ts after deployment.`);
-  }
-  return addr;
-}
-
 export default addresses;

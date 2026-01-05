@@ -18,22 +18,3 @@ export enum VerificationStatus {
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
 }
-
-/**
- * Service provider types
- */
-export enum ProviderType {
-  MANUFACTURER = "manufacturer",
-  SERVICE_CENTER = "service_center",
-  INSPECTOR = "inspector",
-}
-
-/**
- * Service record types
- */
-export enum ServiceType {
-  ROUTINE_MAINTENANCE = "ROUTINE_MAINTENANCE",
-  REPAIR = "REPAIR",
-  INSPECTION = "INSPECTION",
-  REPLACEMENT = "REPLACEMENT",
-}

@@ -9,6 +9,3 @@ export {
   AssetPassportABI,
   EventRegistryABI,
 };
-
-// Type exports
-export type { AssetInfo, LifecycleEvent, EventType } from "./types";

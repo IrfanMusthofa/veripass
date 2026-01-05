@@ -5,17 +5,8 @@ pragma solidity ^0.8.28;
 // COMMON ERRORS
 // =============================================================================
 
-/// @dev Thrown when caller is not authorized to perform an action
-error VeriPass_NotAuthorized();
-
 /// @dev Thrown when an address parameter is the zero address
 error VeriPass_ZeroAddress();
-
-/// @dev Thrown when an operation is attempted on a paused contract
-error VeriPass_ContractPaused();
-
-/// @dev Thrown when an invalid parameter is provided
-error VeriPass_InvalidParameter();
 
 // =============================================================================
 // ASSET PASSPORT ERRORS
