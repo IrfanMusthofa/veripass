@@ -1,9 +1,12 @@
 import { db } from "../db";
-import { assets, serviceRecords } from "../db/schema";
+import { assets, serviceRecordsProviderA } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { NotFoundException } from "../lib/exceptions";
 import { createSuccessResponse, type SuccessResponse } from "../dtos/base.dto";
-import { type ServiceRecordResponse, formatServiceRecordResponse } from "../dtos/service-record.dto";
+import {
+  type ServiceRecordResponse,
+  formatServiceRecordResponse,
+} from "../dtos/service-record.dto";
 
 export async function getServiceRecordsByAssetId(
   assetId: number
@@ -21,8 +24,8 @@ export async function getServiceRecordsByAssetId(
 
   const results = await db
     .select()
-    .from(serviceRecords)
-    .where(eq(serviceRecords.assetId, assetId));
+    .from(serviceRecordsProviderA)
+    .where(eq(serviceRecordsProviderA.assetId, assetId));
 
   return createSuccessResponse(
     results.map(formatServiceRecordResponse),

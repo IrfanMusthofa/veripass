@@ -11,8 +11,8 @@ import { HttpException } from "./lib/exceptions";
 import authRouter from "./routes/auth.route";
 import assetRouter from "./routes/asset.route";
 import evidenceRouter from "./routes/evidence.route";
-import verificationRouter from "./routes/verification.route";
 import serviceRecordRouter from "./routes/service-record.route";
+import providerRouter from "./routes/provider.route";
 
 const app = new Hono();
 
@@ -43,8 +43,8 @@ app.get("/health", (c) => {
 app.route("/api/auth", authRouter);
 app.route("/api/assets", assetRouter);
 app.route("/api/evidence", evidenceRouter);
-app.route("/api/verification-requests", verificationRouter);
 app.route("/api/service-records", serviceRecordRouter);
+app.route("/api/provider", providerRouter);
 
 // ============================================================
 // ERROR HANDLERS

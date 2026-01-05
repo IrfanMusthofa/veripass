@@ -1,24 +1,21 @@
 import { Hono } from "hono";
 import {
+  calculateEvidenceHash,
   createEvidence,
-  confirmEvidence,
   getEvidenceByHash,
   getEvidenceByAssetId,
 } from "../services/evidence.service";
 import {
+  calculateEvidenceHashSchema,
   createEvidenceSchema,
-  confirmEvidenceSchema,
-  evidenceIdParamSchema,
   assetIdParamSchema,
   hashParamSchema,
+  CalculateEvidenceHashInput,
   CreateEvidenceInput,
-  ConfirmEvidenceInput,
-  EvidenceIdParam,
   AssetIdParam,
   HashParam,
 } from "../dtos/evidence.dto";
 import {
-  authMiddleware,
   flexibleAuthMiddleware,
   getAuthUser,
 } from "../middlewares/auth.middleware";
@@ -30,7 +27,22 @@ import {
 
 const evidenceRouter = new Hono();
 
-// Create new evidence (step 1: before blockchain tx)
+// Calculate hash only (no DB write) - for custom events
+// Frontend calls this first to get dataHash, then records on blockchain,
+// then calls POST /api/evidence with txHash
+evidenceRouter.post(
+  "/hash",
+  validate({ schema: calculateEvidenceHashSchema }),
+  async (c) => {
+    const body = getValidated<CalculateEvidenceHashInput>(c, ValidationTarget.BODY);
+    const result = await calculateEvidenceHash(body);
+    return c.json(result);
+  }
+);
+
+// Create evidence
+// - With txHash: Custom event flow (already on blockchain) -> creates as CONFIRMED
+// - Without txHash: Oracle flow -> creates as PENDING
 evidenceRouter.post(
   "/",
   flexibleAuthMiddleware,
@@ -43,21 +55,7 @@ evidenceRouter.post(
   }
 );
 
-// Confirm evidence (step 2: after blockchain tx succeeds)
-evidenceRouter.post(
-  "/:id/confirm",
-  authMiddleware,
-  validate({ schema: evidenceIdParamSchema, target: ValidationTarget.PARAM }),
-  validate({ schema: confirmEvidenceSchema }),
-  async (c) => {
-    const { id } = getValidated<EvidenceIdParam>(c, ValidationTarget.PARAM);
-    const body = getValidated<ConfirmEvidenceInput>(c, ValidationTarget.BODY);
-    const user = getAuthUser(c);
-    const result = await confirmEvidence(id, body, user);
-    return c.json(result);
-  }
-);
-
+// Get evidence by hash
 evidenceRouter.get(
   "/by-hash/:hash",
   validate({ schema: hashParamSchema, target: ValidationTarget.PARAM }),
@@ -68,6 +66,7 @@ evidenceRouter.get(
   }
 );
 
+// Get all evidence for an asset
 evidenceRouter.get(
   "/asset/:assetId",
   validate({ schema: assetIdParamSchema, target: ValidationTarget.PARAM }),
@@ -79,4 +78,3 @@ evidenceRouter.get(
 );
 
 export default evidenceRouter;
-

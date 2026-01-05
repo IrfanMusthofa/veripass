@@ -70,17 +70,34 @@ export interface AssetResponse {
 // Evidence types
 export type EventType = 'MAINTENANCE' | 'VERIFICATION' | 'WARRANTY' | 'CERTIFICATION' | 'CUSTOM';
 
+// Request to calculate hash only (no DB write)
+export interface CalculateHashRequest {
+  assetId: number;
+  eventType: EventType;
+  eventDate?: string;
+  providerName?: string;
+  description?: string;
+  notes?: string;
+  eventData?: Record<string, unknown>;
+}
+
+export interface CalculateHashResponse {
+  dataHash: string;
+}
+
+// Request to create evidence
+// - With txHash: custom event (already on blockchain)
+// - Without txHash: oracle flow (will be recorded by oracle)
 export interface CreateEvidenceRequest {
   assetId: number;
   eventType: EventType;
   eventDate?: string;
   providerName?: string;
   description?: string;
+  notes?: string;
   eventData?: Record<string, unknown>;
-}
-
-export interface ConfirmEvidenceRequest {
-  txHash: string;
+  // For custom events (frontend submits after blockchain tx)
+  txHash?: string;
   blockchainEventId?: number;
 }
 
@@ -88,6 +105,7 @@ export interface EvidenceResponse {
   id: number;
   assetId: number;
   dataHash: string;
+  serviceRecordId: number | null;
   eventType: string;
   eventDate: string | null;
   providerName: string | null;
@@ -104,43 +122,25 @@ export interface EvidenceResponse {
   verifiedAt: string | null;
 }
 
-// Verification Request types
-export type RequestType = 'SERVICE_VERIFICATION' | 'AUTHENTICITY_CHECK';
-export type VerificationStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-
-export interface CreateVerificationRequest {
-  assetId: number;
-  requestType: RequestType;
-  providerId?: string;
-}
-
-export interface VerificationRequestResponse {
-  id: number;
-  requestId: string;
-  assetId: number;
-  requestType: string;
-  providerId: string | null;
-  requestedBy: string;
-  status: VerificationStatus;
-  blockchainEventId: number | null;
-  txHash: string | null;
-  dataHash: string | null;
-  evidenceId: number | null;
-  errorMessage: string | null;
-  createdAt: string;
-  processedAt: string | null;
-}
-
-// Service Records (from oracle)
+// Service Records (provider-submitted records)
 export interface ServiceRecord {
+  id: number;
   recordId: string;
   assetId: number;
   providerId: string;
-  serviceType: string;
+  eventType: string;
+  eventName: string;
   serviceDate: string;
-  technician: string;
-  workPerformed: string[];
-  notes: string | null;
+  technicianName: string | null;
+  technicianNotes: string | null;
+  workPerformed: string[] | null;
+  partsReplaced: Array<{ name: string; partNumber?: string; quantity?: number }> | null;
   verified: boolean;
   createdAt: string;
+  updatedAt: string | null;
+  // Processing status (if available)
+  processingStatus?: string;
+  evidenceId?: number | null;
+  blockchainEventId?: number | null;
+  txHash?: string | null;
 }

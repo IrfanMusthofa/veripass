@@ -66,6 +66,11 @@
   },
   {
     "inputs": [],
+    "name": "VeriPass_EventRegistry_InvalidEventType",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "VeriPass_EventRegistry_InvalidOracleSignature",
     "type": "error"
   },
@@ -475,6 +480,11 @@
         "internalType": "uint256",
         "name": "assetId",
         "type": "uint256"
+      },
+      {
+        "internalType": "enum EventType",
+        "name": "eventType",
+        "type": "uint8"
       },
       {
         "internalType": "bytes32",

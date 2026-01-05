@@ -10,11 +10,19 @@ export enum EventType {
 }
 
 /**
- * Verification request status
+ * Processing status for service records (oracle queue)
  */
-export enum VerificationStatus {
+export enum ProcessingStatus {
   PENDING = "PENDING",
   PROCESSING = "PROCESSING",
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
+}
+
+/**
+ * Evidence status
+ */
+export enum EvidenceStatus {
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
 }

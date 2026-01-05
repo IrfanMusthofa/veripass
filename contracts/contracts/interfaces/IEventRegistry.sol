@@ -73,13 +73,16 @@ interface IEventRegistry {
      * @notice Record a verified event from a trusted oracle
      * @dev Only callable by registered trusted oracles.
      *      Oracle verifies external data and attests to its validity.
+     *      CUSTOM event type is not allowed (reserved for user-submitted events).
      * @param assetId The asset passport token ID
+     * @param eventType The category of the event (MAINTENANCE, VERIFICATION, WARRANTY, CERTIFICATION)
      * @param dataHash Hash of verified data from external source
      * @param oracleSignature Signature proving oracle attestation
      * @return eventId The unique identifier of the recorded event
      */
     function recordVerifiedEvent(
         uint256 assetId,
+        EventType eventType,
         bytes32 dataHash,
         bytes calldata oracleSignature
     ) external returns (uint256 eventId);

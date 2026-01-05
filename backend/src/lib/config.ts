@@ -34,6 +34,11 @@ const configSchema = z.object({
     backendUrl: z.string().url().optional(),
   }),
 
+  // Provider API configuration
+  provider: z.object({
+    apiKey: z.string().min(32, "Provider API key must be at least 32 characters").optional(),
+  }),
+
   // Blockchain configuration
   blockchain: z.object({
     sepoliaRpcUrl: z.string().url(),
@@ -60,6 +65,9 @@ const parseConfig = () => {
       privateKey: process.env.ORACLE_PRIVATE_KEY,
       pollInterval: process.env.POLL_INTERVAL,
       backendUrl: process.env.BACKEND_URL,
+    },
+    provider: {
+      apiKey: process.env.PROVIDER_API_KEY,
     },
     blockchain: {
       sepoliaRpcUrl: process.env.SEPOLIA_RPC_URL,

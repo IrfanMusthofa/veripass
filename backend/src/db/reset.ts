@@ -4,18 +4,18 @@
  */
 
 import { db } from "./index";
-import { assets, evidence, serviceRecords, verificationRequests, authNonces } from "./schema";
+import { assets, evidence, serviceRecordsProviderA, processedServiceRecords, authNonces } from "./schema";
 
 async function reset() {
     console.log("🗑️  Resetting database tables...\n");
 
     try {
         // Delete in order (respect foreign keys)
-        console.log("  Deleting verification_requests...");
-        await db.delete(verificationRequests);
+        console.log("  Deleting processed_service_records...");
+        await db.delete(processedServiceRecords);
 
-        console.log("  Deleting service_records...");
-        await db.delete(serviceRecords);
+        console.log("  Deleting service_records_provider_a...");
+        await db.delete(serviceRecordsProviderA);
 
         console.log("  Deleting evidence...");
         await db.delete(evidence);

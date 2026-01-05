@@ -3,7 +3,7 @@ import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { Card, CardBody, CardHeader, Badge, Button } from '@/components/common';
 import { Skeleton } from '@/components/design-system';
-import { VerificationBadge, VerificationDetails, RequestVerificationForm } from '@/components/verification';
+import { VerificationBadge, VerificationDetails } from '@/components/verification';
 import { truncateAddress, formatTimestamp, truncateHash } from '@/lib';
 import { useAssetByHash, useIsBackendAvailable } from '@/hooks';
 import { useToast } from '@/hooks/useToast';
@@ -20,7 +20,6 @@ export function PassportDetails({ passport, onTransferSuccess }: PassportDetails
   const { address } = useAccount();
   const toast = useToast();
   const [showTransfer, setShowTransfer] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
 
   const { isAvailable: isBackendAvailable } = useIsBackendAvailable();
   const { data: assetData, isLoading: isLoadingAsset } = useAssetByHash(passport.metadataHash, isBackendAvailable);
@@ -177,24 +176,13 @@ export function PassportDetails({ passport, onTransferSuccess }: PassportDetails
               animate="visible"
               className="pt-4 border-t border-[var(--color-border)] space-y-3"
             >
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowTransfer(true)}
-                  fullWidth
-                >
-                  Transfer Passport
-                </Button>
-                {isBackendAvailable && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => setShowVerification(true)}
-                    fullWidth
-                  >
-                    Request Verification
-                  </Button>
-                )}
-              </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowTransfer(true)}
+                fullWidth
+              >
+                Transfer Passport
+              </Button>
             </motion.div>
           )}
         </CardBody>
@@ -208,16 +196,6 @@ export function PassportDetails({ passport, onTransferSuccess }: PassportDetails
         onSuccess={() => {
           setShowTransfer(false);
           onTransferSuccess?.();
-        }}
-      />
-
-      {/* Verification Request Modal */}
-      <RequestVerificationForm
-        isOpen={showVerification}
-        onClose={() => setShowVerification(false)}
-        assetId={Number(passport.tokenId)}
-        onSuccess={() => {
-          toast.success('Verification request submitted');
         }}
       />
     </>

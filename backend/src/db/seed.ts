@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { serviceProviders, serviceRecords } from "./schema";
+import { serviceProviders, serviceRecordsProviderA } from "./schema";
 
 async function seed() {
   console.log("🌱 Seeding database...");
@@ -20,16 +20,20 @@ async function seed() {
     },
   ]).onConflictDoNothing();
 
-  // Seed example service record
-  await db.insert(serviceRecords).values({
+  // Seed example service records with the new schema
+  await db.insert(serviceRecordsProviderA).values({
     recordId: "SVC-2024-002",
     assetId: 4,
     providerId: "rolex-service-jakarta",
-    serviceType: "ROUTINE_MAINTENANCE",
+    eventType: "MAINTENANCE",
+    eventName: "Routine Service",
     serviceDate: "2024-12-01",
-    technician: "Ahmad Rizki",
+    technicianName: "Ahmad Rizki",
+    technicianNotes: "Watch in excellent condition",
     workPerformed: ["Movement cleaning", "Water resistance test", "Gasket replacement"],
-    notes: "Watch in excellent condition",
+    partsReplaced: [
+      { name: "Gasket", partNumber: "GK-001", quantity: 1 }
+    ],
     verified: true,
   }).onConflictDoNothing();
 

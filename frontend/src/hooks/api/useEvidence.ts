@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { CreateEvidenceRequest, EvidenceResponse, ApiResponse } from '@/types/api';
+import type { CreateEvidenceRequest, EvidenceResponse, ApiResponse, CalculateHashRequest, CalculateHashResponse } from '@/types/api';
 
 // Query key factory
 export const evidenceKeys = {
@@ -26,6 +26,13 @@ export function useEvidenceByHash(hash: string | undefined, enabled: boolean = t
     queryFn: () => api.getEvidenceByHash(hash!),
     enabled: enabled && !!hash,
     staleTime: 30 * 1000,
+  });
+}
+
+// Calculate evidence hash mutation (no DB write)
+export function useCalculateEvidenceHash() {
+  return useMutation<ApiResponse<CalculateHashResponse>, Error, CalculateHashRequest>({
+    mutationFn: (data: CalculateHashRequest) => api.calculateEvidenceHash(data),
   });
 }
 

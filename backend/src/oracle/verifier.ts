@@ -1,75 +1,111 @@
 import { ethers } from "ethers";
 import { submitVerifiedEvent, oracleWallet } from "./blockchain";
-import { backendClient } from "./backend-client";
-import type { VerificationRequestResponse } from "../dtos/verification.dto";
+import {
+  createProcessedRecord,
+  completeProcessedRecord,
+  failProcessedRecord,
+  createOracleEvidence,
+  getProviderName,
+} from "./backend-client";
+import { calculateHash } from "../lib/hash";
+import type { ServiceRecordProviderA } from "../db/schema";
 
-export async function processVerificationRequest(request: VerificationRequestResponse): Promise<void> {
-  console.log(`\n🔍 Processing request: ${request.requestId}`);
+/**
+ * Process a service record from a provider.
+ * Creates evidence and records it on the blockchain as a verified event.
+ */
+export async function processServiceRecord(
+  record: ServiceRecordProviderA
+): Promise<void> {
+  console.log(`\n🔍 Processing service record: ${record.recordId}`);
+  console.log(`   Event: ${record.eventType} - ${record.eventName}`);
+
+  let processedRecordId: number | null = null;
 
   try {
-    // Update status to PROCESSING
-    await backendClient.updateRequest(request.requestId, { status: "PROCESSING" });
+    // Create processing entry
+    processedRecordId = await createProcessedRecord(record.id, record.providerId);
 
-    // Fetch service records
-    const records = await backendClient.getServiceRecords(request.assetId);
-
-    if (records.length === 0) {
-      throw new Error("No service records found");
+    // Validate record is verified by provider
+    if (!record.verified) {
+      throw new Error("Service record is not verified by provider");
     }
 
-    console.log(`✅ Found ${records.length} service record(s)`);
+    // Get provider name for display
+    const providerName = await getProviderName(record.providerId);
 
-    // Validate records
-    const isValid = records.every((r) => r.verified === true);
-    if (!isValid) {
-      throw new Error("Service records validation failed");
-    }
-
-    // Prepare evidence data
-    const evidenceData = {
-      assetId: request.assetId,
-      eventType: "VERIFICATION",
-      eventDate: new Date().toISOString().split("T")[0],
-      providerId: request.providerId,
-      providerName: records[0].providerId,
-      description: `Oracle verified service records`,
-      metadata: {
-        serviceRecords: records.map((r) => ({
-          recordId: r.recordId,
-          serviceType: r.serviceType,
-          serviceDate: r.serviceDate,
-        })),
-        verifiedBy: oracleWallet.address,
-      },
+    // Build evidence data
+    const eventData: Record<string, unknown> = {
+      eventName: record.eventName,
+      technicianName: record.technicianName,
+      technicianNotes: record.technicianNotes,
+      workPerformed: record.workPerformed,
+      partsReplaced: record.partsReplaced,
+      serviceRecordId: record.recordId,
+      verifiedBy: oracleWallet.address,
     };
 
-    // Create evidence
-    const evidence = await backendClient.createEvidence(evidenceData);
-    console.log(`📄 Evidence created: ${evidence.id}`);
+    // Build hash data (same structure as frontend calculateHash)
+    const hashData = {
+      assetId: Number(record.assetId),
+      eventType: record.eventType,
+      eventDate: record.serviceDate,
+      providerName: providerName,
+      description: `${record.eventName} - ${record.technicianNotes || "Service completed"}`,
+      notes: record.technicianNotes || "",
+      eventData,
+    };
 
-    // Create hash and signature
-    const dataHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(evidenceData)));
+    // Calculate deterministic hash
+    const dataHash = calculateHash(hashData);
+    console.log(`   Hash: ${dataHash.substring(0, 18)}...`);
+
+    // Sign the hash
     const signature = await oracleWallet.signMessage(ethers.getBytes(dataHash));
 
-    // Submit to blockchain
-    const result = await submitVerifiedEvent(request.assetId, dataHash, signature);
+    // Submit to blockchain with correct event type
+    console.log(`   Submitting to blockchain...`);
+    const result = await submitVerifiedEvent(
+      Number(record.assetId),
+      record.eventType,
+      dataHash,
+      signature
+    );
+    console.log(`   TX: ${result.txHash.substring(0, 18)}...`);
 
-    // Update request to COMPLETED
-    await backendClient.updateRequest(request.requestId, {
-      status: "COMPLETED",
+    // Create evidence in database
+    const evidenceId = await createOracleEvidence({
+      assetId: Number(record.assetId),
+      serviceRecordId: record.id,
+      eventType: record.eventType,
+      eventDate: record.serviceDate,
+      providerName,
+      description: `${record.eventName} - ${record.technicianNotes || "Service completed"}`,
+      eventData,
+      dataHash,
+      txHash: result.txHash,
+      blockchainEventId: result.eventId,
+      oracleAddress: oracleWallet.address,
+    });
+
+    // Update processed record to COMPLETED
+    await completeProcessedRecord(processedRecordId, {
+      evidenceId,
       blockchainEventId: result.eventId,
       txHash: result.txHash,
-      dataHash: evidence.dataHash,
-      evidenceId: evidence.id,
     });
 
-    console.log(`✅ Verification completed: ${request.requestId}`);
+    console.log(`✅ Service record processed: ${record.recordId}`);
+    console.log(`   Evidence ID: ${evidenceId}`);
+    console.log(`   Blockchain Event ID: ${result.eventId}`);
   } catch (error) {
-    console.error(`❌ Verification failed:`, error);
+    console.error(`❌ Processing failed:`, error);
 
-    await backendClient.updateRequest(request.requestId, {
-      status: "FAILED",
-      errorMessage: error instanceof Error ? error.message : "Unknown error",
-    });
+    if (processedRecordId) {
+      await failProcessedRecord(
+        processedRecordId,
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    }
   }
 }

@@ -51,3 +51,6 @@ error VeriPass_EventRegistry_OracleAlreadyRegistered(address oracle);
 
 /// @dev Thrown when oracle is not registered
 error VeriPass_EventRegistry_OracleNotRegistered(address oracle);
+
+/// @dev Thrown when event type is invalid for the operation (e.g., CUSTOM for verified events)
+error VeriPass_EventRegistry_InvalidEventType();

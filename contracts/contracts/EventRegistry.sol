@@ -53,6 +53,7 @@ contract EventRegistry is Ownable, IEventRegistry {
 
     function recordVerifiedEvent(
         uint256 assetId,
+        EventType eventType,
         bytes32 dataHash,
         bytes calldata oracleSignature
     ) external override returns (uint256 eventId) {
@@ -64,6 +65,11 @@ contract EventRegistry is Ownable, IEventRegistry {
             revert VeriPass_EventRegistry_InvalidDataHash();
         if (oracleSignature.length == 0) {
             revert VeriPass_EventRegistry_InvalidOracleSignature();
+        }
+
+        // Only allow verified event types (not CUSTOM - that's for user-submitted events)
+        if (eventType == EventType.CUSTOM) {
+            revert VeriPass_EventRegistry_InvalidEventType();
         }
 
         // verify that asset exists
@@ -80,7 +86,7 @@ contract EventRegistry is Ownable, IEventRegistry {
         _events[eventId] = LifecycleEvent({
             id: eventId,
             assetId: assetId,
-            eventType: EventType.VERIFICATION,
+            eventType: eventType,
             submitter: msg.sender,
             timestamp: uint40(block.timestamp),
             dataHash: dataHash
@@ -91,7 +97,7 @@ contract EventRegistry is Ownable, IEventRegistry {
         emit EventRecorded(
             assetId,
             eventId,
-            EventType.VERIFICATION,
+            eventType,
             msg.sender,
             dataHash
         );

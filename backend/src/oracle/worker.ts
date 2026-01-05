@@ -1,6 +1,6 @@
 import { checkOracleRegistration, oracleWallet, provider } from "./blockchain";
-import { backendClient } from "./backend-client";
-import { processVerificationRequest } from "./verifier";
+import { getUnprocessedServiceRecords } from "./backend-client";
+import { processServiceRecord } from "./verifier";
 import { config } from "../lib/config";
 import { ethers } from "ethers";
 
@@ -33,7 +33,7 @@ export class OracleWorker {
 
     // Start polling
     this.isRunning = true;
-    console.log(`🔄 Polling every ${config.oracle.pollInterval}ms\n`);
+    console.log(`🔄 Polling for service records every ${config.oracle.pollInterval}ms\n`);
 
     this.poll();
     this.intervalId = setInterval(() => this.poll(), config.oracle.pollInterval);
@@ -46,17 +46,19 @@ export class OracleWorker {
     if (!this.isRunning) return;
 
     try {
-      const requests = await backendClient.getPendingRequests();
+      // Get unprocessed service records from database
+      const records = await getUnprocessedServiceRecords();
 
-      if (requests.length === 0) {
+      if (records.length === 0) {
         process.stdout.write(".");
         return;
       }
 
-      console.log(`\n📋 Found ${requests.length} pending request(s)`);
+      console.log(`\n📋 Found ${records.length} unprocessed service record(s)`);
 
-      for (const request of requests) {
-        await processVerificationRequest(request);
+      // Process each record
+      for (const record of records) {
+        await processServiceRecord(record);
       }
     } catch (error) {
       console.error("Polling error:", error);

@@ -1,43 +1,141 @@
-import axios, { AxiosInstance } from "axios";
-import { config } from "../lib/config";
-import type { VerificationRequestResponse } from "../dtos/verification.dto";
-import type { ServiceRecordResponse } from "../dtos/service-record.dto";
+import { db } from "../db";
+import {
+  serviceRecordsProviderA,
+  processedServiceRecords,
+  evidence,
+  serviceProviders,
+} from "../db/schema";
+import { eq, isNull } from "drizzle-orm";
+import type { ServiceRecordProviderA } from "../db/schema";
 
-class BackendClient {
-  private client: AxiosInstance;
+/**
+ * Get unprocessed service records.
+ * Returns service records that don't have a corresponding entry in processed_service_records.
+ */
+export async function getUnprocessedServiceRecords(): Promise<ServiceRecordProviderA[]> {
+  const records = await db
+    .select({
+      serviceRecord: serviceRecordsProviderA,
+    })
+    .from(serviceRecordsProviderA)
+    .leftJoin(
+      processedServiceRecords,
+      eq(serviceRecordsProviderA.id, processedServiceRecords.serviceRecordId)
+    )
+    .where(isNull(processedServiceRecords.id));
 
-  constructor() {
-    // Use BACKEND_URL from config if provided (for deployed environments),
-    // otherwise fall back to localhost for local development
-    const baseURL = config.oracle.backendUrl || `http://localhost:${config.port}`;
-
-    this.client = axios.create({
-      baseURL,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Oracle-Key": config.oracle.apiKey,
-      },
-    });
-  }
-
-  async getPendingRequests(): Promise<VerificationRequestResponse[]> {
-    const response = await this.client.get("/api/verification-requests/pending");
-    return response.data.data;
-  }
-
-  async getServiceRecords(assetId: number): Promise<ServiceRecordResponse[]> {
-    const response = await this.client.get(`/api/service-records/${assetId}`);
-    return response.data.data;
-  }
-
-  async updateRequest(requestId: string, data: Record<string, unknown>): Promise<void> {
-    await this.client.patch(`/api/verification-requests/${requestId}`, data);
-  }
-
-  async createEvidence(data: Record<string, unknown>): Promise<{ id: number; dataHash: string }> {
-    const response = await this.client.post("/api/evidence", data);
-    return response.data;
-  }
+  return records.map((r) => r.serviceRecord);
 }
 
-export const backendClient = new BackendClient();
+/**
+ * Create a processed service record entry (PROCESSING status).
+ */
+export async function createProcessedRecord(
+  serviceRecordId: number,
+  providerId: string
+): Promise<number> {
+  const inserted = await db
+    .insert(processedServiceRecords)
+    .values({
+      serviceRecordId,
+      providerId,
+      status: "PROCESSING",
+    })
+    .returning({ id: processedServiceRecords.id });
+
+  return inserted[0].id;
+}
+
+/**
+ * Update processed service record to COMPLETED.
+ */
+export async function completeProcessedRecord(
+  processedRecordId: number,
+  data: {
+    evidenceId: number;
+    blockchainEventId: number;
+    txHash: string;
+  }
+): Promise<void> {
+  await db
+    .update(processedServiceRecords)
+    .set({
+      status: "COMPLETED",
+      evidenceId: data.evidenceId,
+      blockchainEventId: data.blockchainEventId,
+      txHash: data.txHash,
+      processedAt: new Date(),
+    })
+    .where(eq(processedServiceRecords.id, processedRecordId));
+}
+
+/**
+ * Update processed service record to FAILED.
+ */
+export async function failProcessedRecord(
+  processedRecordId: number,
+  errorMessage: string
+): Promise<void> {
+  await db
+    .update(processedServiceRecords)
+    .set({
+      status: "FAILED",
+      errorMessage,
+      processedAt: new Date(),
+    })
+    .where(eq(processedServiceRecords.id, processedRecordId));
+}
+
+/**
+ * Create evidence record for oracle-verified event.
+ */
+export async function createOracleEvidence(data: {
+  assetId: number;
+  serviceRecordId: number;
+  eventType: string;
+  eventDate: string;
+  providerName: string;
+  description: string;
+  eventData: Record<string, unknown>;
+  dataHash: string;
+  txHash: string;
+  blockchainEventId: number;
+  oracleAddress: string;
+}): Promise<number> {
+  const inserted = await db
+    .insert(evidence)
+    .values({
+      assetId: data.assetId,
+      serviceRecordId: data.serviceRecordId,
+      dataHash: data.dataHash,
+      eventType: data.eventType,
+      eventDate: data.eventDate,
+      providerName: data.providerName,
+      description: data.description,
+      eventData: data.eventData,
+      status: "CONFIRMED",
+      isVerified: true,
+      verifiedBy: data.oracleAddress,
+      txHash: data.txHash,
+      blockchainEventId: data.blockchainEventId,
+      createdBy: data.oracleAddress,
+      confirmedAt: new Date(),
+      verifiedAt: new Date(),
+    })
+    .returning({ id: evidence.id });
+
+  return inserted[0].id;
+}
+
+/**
+ * Get provider name by provider ID.
+ */
+export async function getProviderName(providerId: string): Promise<string> {
+  const provider = await db
+    .select({ providerName: serviceProviders.providerName })
+    .from(serviceProviders)
+    .where(eq(serviceProviders.providerId, providerId))
+    .limit(1);
+
+  return provider.length > 0 ? provider[0].providerName : providerId;
+}

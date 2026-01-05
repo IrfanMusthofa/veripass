@@ -11,14 +11,27 @@ export const eventRegistry = new ethers.Contract(
   oracleWallet
 );
 
+// Map event type string to enum value
+const EVENT_TYPE_ENUM: Record<string, number> = {
+  MAINTENANCE: 0,
+  VERIFICATION: 1,
+  WARRANTY: 2,
+  CERTIFICATION: 3,
+  CUSTOM: 4,
+};
+
 export async function submitVerifiedEvent(
   assetId: number,
+  eventType: string,
   dataHash: string,
   signature: string
 ): Promise<{ txHash: string; eventId: number }> {
-  console.log(`📤 Submitting verified event for asset ${assetId}`);
+  console.log(`📤 Submitting verified ${eventType} event for asset ${assetId}`);
 
-  const tx = await eventRegistry.recordVerifiedEvent(assetId, dataHash, signature);
+  // Convert event type string to enum value
+  const eventTypeEnum = EVENT_TYPE_ENUM[eventType] ?? 0;
+
+  const tx = await eventRegistry.recordVerifiedEvent(assetId, eventTypeEnum, dataHash, signature);
   console.log(`⏳ TX sent: ${tx.hash}`);
 
   const receipt = await tx.wait();

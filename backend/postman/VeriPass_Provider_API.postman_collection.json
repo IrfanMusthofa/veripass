@@ -1,0 +1,187 @@
+{
+  "info": {
+    "_postman_id": "veripass-provider-api",
+    "name": "VeriPass Provider API",
+    "description": "API collection for authorized service providers to submit service records that will be verified by the oracle and recorded on the blockchain.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "providerApiKey",
+      "value": "your-provider-api-key-at-least-32-characters-long",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Service Records",
+      "item": [
+        {
+          "name": "Create Service Record - Maintenance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Provider-Key",
+                "value": "{{providerApiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": 1,\n  \"eventType\": \"MAINTENANCE\",\n  \"eventName\": \"Routine Service\",\n  \"serviceDate\": \"2024-12-15\",\n  \"technicianName\": \"John Smith\",\n  \"technicianNotes\": \"Watch is in excellent condition. All components functioning properly.\",\n  \"workPerformed\": [\n    \"Movement cleaning and lubrication\",\n    \"Water resistance test\",\n    \"Timing adjustment\",\n    \"Case polishing\"\n  ],\n  \"partsReplaced\": [\n    {\n      \"name\": \"Gasket\",\n      \"partNumber\": \"GK-2024-001\",\n      \"quantity\": 1\n    },\n    {\n      \"name\": \"Crown tube\",\n      \"partNumber\": \"CT-2024-003\",\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/provider/service-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "provider", "service-records"]
+            },
+            "description": "Create a new maintenance service record. This will be picked up by the oracle and recorded on the blockchain as a verified event."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Service Record - Verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Provider-Key",
+                "value": "{{providerApiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": 1,\n  \"eventType\": \"VERIFICATION\",\n  \"eventName\": \"Authenticity Verification\",\n  \"serviceDate\": \"2024-12-15\",\n  \"technicianName\": \"Expert Verifier\",\n  \"technicianNotes\": \"All serial numbers verified. Authentic product confirmed.\",\n  \"workPerformed\": [\n    \"Serial number verification\",\n    \"Movement inspection\",\n    \"Documentation check\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/provider/service-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "provider", "service-records"]
+            },
+            "description": "Create a verification/authenticity check record."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Service Record - Warranty",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Provider-Key",
+                "value": "{{providerApiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": 1,\n  \"eventType\": \"WARRANTY\",\n  \"eventName\": \"Warranty Claim - Battery Replacement\",\n  \"serviceDate\": \"2024-12-15\",\n  \"technicianName\": \"Service Tech\",\n  \"technicianNotes\": \"Battery replaced under warranty. 2-year warranty on new battery.\",\n  \"workPerformed\": [\n    \"Battery test\",\n    \"Battery replacement\",\n    \"Function test\"\n  ],\n  \"partsReplaced\": [\n    {\n      \"name\": \"Battery\",\n      \"partNumber\": \"BAT-2024-SW\",\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/provider/service-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "provider", "service-records"]
+            },
+            "description": "Create a warranty claim or service record."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Service Record - Certification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Provider-Key",
+                "value": "{{providerApiKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": 1,\n  \"eventType\": \"CERTIFICATION\",\n  \"eventName\": \"COSC Chronometer Certification\",\n  \"serviceDate\": \"2024-12-15\",\n  \"technicianName\": \"Certification Officer\",\n  \"technicianNotes\": \"Movement passed all COSC tests. Certificate number: COSC-2024-12345\",\n  \"workPerformed\": [\n    \"Precision testing\",\n    \"Temperature variation test\",\n    \"Position variation test\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/provider/service-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "provider", "service-records"]
+            },
+            "description": "Create a certification record from an authorized certifying body."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Service Record by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Provider-Key",
+                "value": "{{providerApiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/provider/service-records/:recordId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "provider", "service-records", ":recordId"],
+              "variable": [
+                {
+                  "key": "recordId",
+                  "value": "SR-1234567890-abcd1234",
+                  "description": "The record ID returned when creating a service record"
+                }
+              ]
+            },
+            "description": "Get a service record by its record ID. Includes processing status (PENDING, PROCESSING, COMPLETED, FAILED)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Service Records by Asset",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Provider-Key",
+                "value": "{{providerApiKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/provider/service-records/asset/:assetId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "provider", "service-records", "asset", ":assetId"],
+              "variable": [
+                {
+                  "key": "assetId",
+                  "value": "1",
+                  "description": "The asset ID to get service records for"
+                }
+              ]
+            },
+            "description": "Get all service records for a specific asset."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

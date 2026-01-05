@@ -1,13 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useChainId, useWaitForTransactionReceipt } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Modal, Button, Input, Textarea } from '@/components/common';
 import { useRecordEvent } from '@/hooks';
 import { useToast } from '@/hooks/useToast';
 import { api } from '@/lib/api';
-import { EVENT_TYPE_LABELS } from '@/lib';
-import { fadeVariants } from '@/lib/animations';
-import type { EventType, EvidenceResponse } from '@/types/api';
 
 interface RecordEventFormContentProps {
   assetId: bigint;
@@ -15,116 +11,89 @@ interface RecordEventFormContentProps {
   onSuccess?: () => void;
 }
 
-// Map numeric event type to string
-const EVENT_TYPE_MAP: Record<number, EventType> = {
-  0: 'MAINTENANCE',
-  1: 'VERIFICATION',
-  2: 'WARRANTY',
-  3: 'CERTIFICATION',
-  4: 'CUSTOM',
-};
+// localStorage key for pending evidence creation
+const PENDING_EVIDENCE_KEY = 'veripass_pending_evidence';
 
-// Service type options for maintenance events
-const SERVICE_TYPES = ['Inspection', 'Repair', 'Service', 'Replacement', 'Other'] as const;
+interface PendingEvidence {
+  assetId: number;
+  dataHash: string;
+  txHash: string;
+  blockchainEventId?: number;
+  description: string;
+  eventDate?: string;
+  providerName?: string;
+  notes?: string;
+  eventData?: Record<string, unknown>;
+  timestamp: number;
+}
 
-// Verification result options
-const VERIFICATION_RESULTS = ['Passed', 'Failed', 'Pending'] as const;
-
-// Warranty type options
-const WARRANTY_TYPES = ['Claim', 'Extension', 'Transfer'] as const;
-
-// Form data interfaces
-interface EventFormData {
-  // Common fields
+// Form data interface - only fields relevant for custom events
+interface CustomEventFormData {
   description: string;
   eventDate: string;
-  notes: string;
-  // Maintenance fields
-  technician: string;
-  serviceType: string;
-  workPerformed: string;
-  // Verification fields
-  verifierName: string;
-  verificationMethod: string;
-  result: string;
-  // Warranty fields
   providerName: string;
-  warrantyType: string;
-  warrantyExpiry: string;
-  claimDetails: string;
-  // Certification fields
-  certifyingBody: string;
-  certificateNumber: string;
-  expiryDate: string;
-  certificationType: string;
-  // Custom fields
+  notes: string;
   customData: string;
 }
 
 interface FormErrors {
   description?: string;
-  eventDate?: string;
-  technician?: string;
-  serviceType?: string;
-  verifierName?: string;
-  result?: string;
-  providerName?: string;
-  warrantyType?: string;
-  certifyingBody?: string;
-  certificateNumber?: string;
   customData?: string;
 }
 
-const getInitialFormData = (): EventFormData => ({
+const getInitialFormData = (): CustomEventFormData => ({
   description: '',
   eventDate: '',
-  notes: '',
-  technician: '',
-  serviceType: '',
-  workPerformed: '',
-  verifierName: '',
-  verificationMethod: '',
-  result: '',
   providerName: '',
-  warrantyType: '',
-  warrantyExpiry: '',
-  claimDetails: '',
-  certifyingBody: '',
-  certificateNumber: '',
-  expiryDate: '',
-  certificationType: '',
+  notes: '',
   customData: '',
 });
+
+// Save pending evidence to localStorage for retry
+function savePendingEvidence(data: PendingEvidence): void {
+  const existing = getPendingEvidences();
+  existing.push(data);
+  localStorage.setItem(PENDING_EVIDENCE_KEY, JSON.stringify(existing));
+}
+
+// Get all pending evidences from localStorage
+function getPendingEvidences(): PendingEvidence[] {
+  try {
+    const stored = localStorage.getItem(PENDING_EVIDENCE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+// Remove a pending evidence from localStorage
+function removePendingEvidence(dataHash: string): void {
+  const existing = getPendingEvidences();
+  const filtered = existing.filter(e => e.dataHash !== dataHash);
+  localStorage.setItem(PENDING_EVIDENCE_KEY, JSON.stringify(filtered));
+}
 
 function RecordEventFormContent({ assetId, onClose, onSuccess }: RecordEventFormContentProps) {
   const chainId = useChainId();
   const toast = useToast();
 
-  const [eventType, setEventType] = useState<number>(0);
-  const [formData, setFormData] = useState<EventFormData>(getInitialFormData);
+  const [formData, setFormData] = useState<CustomEventFormData>(getInitialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isCreatingEvidence, setIsCreatingEvidence] = useState(false);
-  const [pendingEvidence, setPendingEvidence] = useState<EvidenceResponse | null>(null);
-
-  // Reset type-specific fields when event type changes
-  const handleEventTypeChange = (newType: number) => {
-    setEventType(newType);
-    setErrors({});
-  };
-
-  // Update form field helper
-  const updateField = (field: keyof EventFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
-    }
-  };
+  const [isCalculatingHash, setIsCalculatingHash] = useState(false);
+  const [currentHash, setCurrentHash] = useState<string | null>(null);
+  const [pendingTxData, setPendingTxData] = useState<{
+    dataHash: string;
+    description: string;
+    eventDate?: string;
+    providerName?: string;
+    notes?: string;
+    eventData?: Record<string, unknown>;
+  } | null>(null);
 
   const { recordEvent, hash, isPending, isConfirming, isSuccess, error: txError } = useRecordEvent(chainId);
 
-  // Wait for transaction receipt
-  useWaitForTransactionReceipt({
+  // Wait for transaction receipt to get blockchainEventId
+  const { data: receipt } = useWaitForTransactionReceipt({
     hash,
   });
 
@@ -132,170 +101,148 @@ function RecordEventFormContent({ assetId, onClose, onSuccess }: RecordEventForm
   const handledSuccess = useRef(false);
   const handledError = useRef<Error | null>(null);
 
-  // Handle blockchain success -> confirm evidence
+  // Update form field helper
+  const updateField = (field: keyof CustomEventFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  // Retry pending evidence creation from localStorage
+  const retryPendingEvidences = useCallback(async () => {
+    const pending = getPendingEvidences();
+    for (const evidence of pending) {
+      // Only retry if less than 1 hour old
+      if (Date.now() - evidence.timestamp > 60 * 60 * 1000) {
+        removePendingEvidence(evidence.dataHash);
+        continue;
+      }
+
+      try {
+        await api.createEvidence({
+          assetId: evidence.assetId,
+          eventType: 'CUSTOM',
+          description: evidence.description,
+          eventDate: evidence.eventDate,
+          providerName: evidence.providerName,
+          notes: evidence.notes,
+          eventData: evidence.eventData,
+          txHash: evidence.txHash,
+          blockchainEventId: evidence.blockchainEventId,
+        });
+        removePendingEvidence(evidence.dataHash);
+        console.log('Retried pending evidence successfully:', evidence.dataHash);
+      } catch (err) {
+        console.error('Failed to retry pending evidence:', err);
+      }
+    }
+  }, []);
+
+  // Retry pending evidences on mount
   useEffect(() => {
-    async function confirmEvidence() {
-      if (isSuccess && pendingEvidence && hash && !handledSuccess.current) {
+    retryPendingEvidences();
+  }, [retryPendingEvidences]);
+
+  // Handle blockchain success -> create evidence in DB
+  useEffect(() => {
+    async function createEvidence() {
+      if (isSuccess && pendingTxData && hash && !handledSuccess.current) {
         handledSuccess.current = true;
+
+        // Extract blockchainEventId from receipt logs if available
+        let blockchainEventId: number | undefined;
+        if (receipt?.logs) {
+          // The EventRecorded event has eventId as first indexed topic
+          // Topic 0 is event signature, Topic 1 is eventId
+          const eventLog = receipt.logs.find(log => log.topics.length >= 2);
+          if (eventLog && eventLog.topics[1]) {
+            blockchainEventId = parseInt(eventLog.topics[1], 16);
+          }
+        }
+
         try {
-          await api.confirmEvidence(pendingEvidence.id, {
+          // Step 3: Create evidence as CONFIRMED in database
+          await api.createEvidence({
+            assetId: Number(assetId),
+            eventType: 'CUSTOM',
+            description: pendingTxData.description,
+            eventDate: pendingTxData.eventDate,
+            providerName: pendingTxData.providerName,
+            notes: pendingTxData.notes,
+            eventData: pendingTxData.eventData,
             txHash: hash,
-            // blockchainEventId could be extracted from receipt logs if needed
+            blockchainEventId,
           });
-          toast.success('Event recorded successfully!');
+
+          toast.success('Custom event recorded successfully!');
           onSuccess?.();
         } catch (err) {
-          console.error('Failed to confirm evidence:', err);
-          toast.error('Event recorded on blockchain but failed to confirm in database');
+          console.error('Failed to create evidence in database:', err);
+
+          // Save to localStorage for retry
+          savePendingEvidence({
+            assetId: Number(assetId),
+            dataHash: pendingTxData.dataHash,
+            txHash: hash,
+            blockchainEventId,
+            description: pendingTxData.description,
+            eventDate: pendingTxData.eventDate,
+            providerName: pendingTxData.providerName,
+            notes: pendingTxData.notes,
+            eventData: pendingTxData.eventData,
+            timestamp: Date.now(),
+          });
+
+          toast.error('Event recorded on blockchain but failed to save to database. Will retry automatically.');
           onSuccess?.(); // Still call success since blockchain tx worked
         }
       }
     }
-    confirmEvidence();
-  }, [isSuccess, pendingEvidence, hash, toast, onSuccess]);
+    createEvidence();
+  }, [isSuccess, pendingTxData, hash, receipt, assetId, toast, onSuccess]);
 
   // Handle blockchain error
   useEffect(() => {
     if (txError && handledError.current !== txError) {
       handledError.current = txError;
       toast.error(txError.message || 'Failed to record event on blockchain');
-      // Reset pending evidence so user can retry
-      setPendingEvidence(null);
+      // Reset state so user can retry
+      setPendingTxData(null);
+      setCurrentHash(null);
     }
   }, [txError, toast]);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Description is required for all types
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
     }
 
-    // Type-specific validation
-    switch (eventType) {
-      case 0: // MAINTENANCE
-        if (!formData.technician.trim()) {
-          newErrors.technician = 'Technician name is required';
-        }
-        if (!formData.serviceType) {
-          newErrors.serviceType = 'Service type is required';
-        }
-        break;
-      case 1: // VERIFICATION
-        if (!formData.verifierName.trim()) {
-          newErrors.verifierName = 'Verifier name is required';
-        }
-        if (!formData.result) {
-          newErrors.result = 'Verification result is required';
-        }
-        break;
-      case 2: // WARRANTY
-        if (!formData.providerName.trim()) {
-          newErrors.providerName = 'Provider name is required';
-        }
-        if (!formData.warrantyType) {
-          newErrors.warrantyType = 'Warranty type is required';
-        }
-        break;
-      case 3: // CERTIFICATION
-        if (!formData.certifyingBody.trim()) {
-          newErrors.certifyingBody = 'Certifying body is required';
-        }
-        if (!formData.certificateNumber.trim()) {
-          newErrors.certificateNumber = 'Certificate number is required';
-        }
-        break;
-      case 4: // CUSTOM
-        // Validate JSON if provided
-        if (formData.customData.trim()) {
-          try {
-            JSON.parse(formData.customData);
-          } catch {
-            newErrors.customData = 'Please enter valid JSON data';
-          }
-        }
-        break;
+    // Validate JSON if provided
+    if (formData.customData.trim()) {
+      try {
+        JSON.parse(formData.customData);
+      } catch {
+        newErrors.customData = 'Please enter valid JSON data';
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Build eventData object based on event type
-  const buildEventData = (): Record<string, unknown> => {
-    const baseData: Record<string, unknown> = {
-      description: formData.description,
-    };
-
-    if (formData.eventDate) {
-      baseData.date = formData.eventDate;
-    }
-    if (formData.notes.trim()) {
-      baseData.notes = formData.notes;
+  // Build eventData object
+  const buildEventData = (): Record<string, unknown> | undefined => {
+    if (!formData.customData.trim()) {
+      return undefined;
     }
 
-    switch (eventType) {
-      case 0: // MAINTENANCE
-        return {
-          ...baseData,
-          technician: formData.technician,
-          serviceType: formData.serviceType,
-          workPerformed: formData.workPerformed.trim()
-            ? formData.workPerformed.split('\n').filter(Boolean)
-            : [],
-        };
-      case 1: // VERIFICATION
-        return {
-          ...baseData,
-          verifierName: formData.verifierName,
-          verificationMethod: formData.verificationMethod || undefined,
-          result: formData.result,
-        };
-      case 2: // WARRANTY
-        return {
-          ...baseData,
-          providerName: formData.providerName,
-          warrantyType: formData.warrantyType,
-          warrantyExpiry: formData.warrantyExpiry || undefined,
-          claimDetails: formData.claimDetails || undefined,
-        };
-      case 3: // CERTIFICATION
-        return {
-          ...baseData,
-          certifyingBody: formData.certifyingBody,
-          certificateNumber: formData.certificateNumber,
-          expiryDate: formData.expiryDate || undefined,
-          certificationType: formData.certificationType || undefined,
-        };
-      case 4: // CUSTOM
-        if (formData.customData.trim()) {
-          try {
-            const customParsed = JSON.parse(formData.customData);
-            return { ...baseData, ...customParsed };
-          } catch {
-            return baseData;
-          }
-        }
-        return baseData;
-      default:
-        return baseData;
-    }
-  };
-
-  // Get provider name based on event type
-  const getProviderName = (): string | undefined => {
-    switch (eventType) {
-      case 0:
-        return formData.technician || undefined;
-      case 1:
-        return formData.verifierName || undefined;
-      case 2:
-        return formData.providerName || undefined;
-      case 3:
-        return formData.certifyingBody || undefined;
-      default:
-        return undefined;
+    try {
+      return JSON.parse(formData.customData);
+    } catch {
+      return undefined;
     }
   };
 
@@ -309,71 +256,73 @@ function RecordEventFormContent({ assetId, onClose, onSuccess }: RecordEventForm
     handledError.current = null;
 
     try {
-      setIsCreatingEvidence(true);
+      setIsCalculatingHash(true);
 
-      // Build the event data from form fields
       const eventData = buildEventData();
 
-      // Step 1: Create evidence in backend
-      const response = await api.createEvidence({
+      // Step 1: Calculate hash (no DB write)
+      const hashResponse = await api.calculateEvidenceHash({
         assetId: Number(assetId),
-        eventType: EVENT_TYPE_MAP[eventType],
+        eventType: 'CUSTOM',
         eventDate: formData.eventDate || undefined,
-        providerName: getProviderName(),
+        providerName: formData.providerName || undefined,
         description: formData.description,
+        notes: formData.notes || undefined,
         eventData,
       });
 
-      setPendingEvidence(response.data);
-      const dataHash = response.data.dataHash as `0x${string}`;
+      const dataHash = hashResponse.data.dataHash as `0x${string}`;
+      setCurrentHash(dataHash);
 
-      // Step 2: Record on blockchain
-      recordEvent(assetId, eventType, dataHash);
+      // Save data for Step 3 after blockchain confirmation
+      setPendingTxData({
+        dataHash,
+        description: formData.description,
+        eventDate: formData.eventDate || undefined,
+        providerName: formData.providerName || undefined,
+        notes: formData.notes || undefined,
+        eventData,
+      });
+
+      setIsCalculatingHash(false);
+
+      // Step 2: Record on blockchain (eventType 4 = CUSTOM)
+      recordEvent(assetId, 4, dataHash);
     } catch (err) {
-      console.error('Failed to create evidence:', err);
-      toast.error('Failed to save event data');
-    } finally {
-      setIsCreatingEvidence(false);
+      console.error('Failed to calculate hash:', err);
+      toast.error('Failed to prepare event data');
+      setIsCalculatingHash(false);
     }
   };
 
-  const isLoading = isCreatingEvidence || isPending || isConfirming;
+  const isLoading = isCalculatingHash || isPending || isConfirming;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+      {/* Warning banner */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <div className="flex items-start gap-2">
+          <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <p className="text-sm font-medium text-amber-800">Custom Event - Not Verified</p>
+            <p className="text-xs text-amber-700 mt-0.5">
+              Custom events are recorded directly by users and are not verified by service providers.
+              For verified events, please use an authorized service provider.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-gray-50 rounded-lg p-4">
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Asset ID</span>
           <span className="font-medium">#{assetId.toString()}</span>
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Event Type
-        </label>
-        <select
-          value={eventType}
-          onChange={(e) => handleEventTypeChange(Number(e.target.value))}
-          disabled={isLoading}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-        >
-          {Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1 text-sm text-gray-500">
-          {eventType === 0 && 'Service, repair, or inspection records'}
-          {eventType === 1 && 'Authenticity verification checks'}
-          {eventType === 2 && 'Warranty claims, extensions, or transfers'}
-          {eventType === 3 && 'Third-party certifications'}
-          {eventType === 4 && 'Application-specific events'}
-        </p>
-      </div>
-
-      {/* Common fields */}
+      {/* Description - required */}
       <Input
         label="Description"
         placeholder="Brief description of the event"
@@ -383,249 +332,25 @@ function RecordEventFormContent({ assetId, onClose, onSuccess }: RecordEventForm
         disabled={isLoading}
       />
 
+      {/* Optional fields in a grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
-          label="Event Date"
+          label="Event Date (Optional)"
           type="date"
           value={formData.eventDate}
           onChange={(e) => updateField('eventDate', e.target.value)}
-          error={errors.eventDate}
+          disabled={isLoading}
+        />
+        <Input
+          label="Source/Provider Name (Optional)"
+          placeholder="e.g., Owner, Third Party"
+          value={formData.providerName}
+          onChange={(e) => updateField('providerName', e.target.value)}
           disabled={isLoading}
         />
       </div>
 
-      {/* Type-specific fields */}
-      <AnimatePresence mode="wait">
-        {/* MAINTENANCE fields */}
-        {eventType === 0 && (
-          <motion.div key="maintenance" {...fadeVariants} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Technician Name"
-                placeholder="e.g., John Doe"
-                value={formData.technician}
-                onChange={(e) => updateField('technician', e.target.value)}
-                error={errors.technician}
-                disabled={isLoading}
-              />
-              <div>
-                <label className="block text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)] mb-[var(--spacing-1)]">
-                  Service Type
-                </label>
-                <select
-                  value={formData.serviceType}
-                  onChange={(e) => updateField('serviceType', e.target.value)}
-                  disabled={isLoading}
-                  className={`
-                    w-full h-9 px-[var(--spacing-3)] py-[var(--spacing-2)]
-                    bg-[var(--color-bg-secondary)] border border-transparent
-                    rounded-[var(--radius-md)] text-[var(--font-size-sm)] text-[var(--color-text-primary)]
-                    transition-all duration-[var(--transition-fast)]
-                    focus:outline-none focus:bg-[var(--color-bg-primary)]
-                    focus:border-[var(--color-border-focus)] focus:ring-1 focus:ring-[var(--color-border-focus)]
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    ${errors.serviceType ? 'border-[var(--color-accent-red)] bg-[var(--color-accent-red-light)]' : ''}
-                  `}
-                >
-                  <option value="">Select service type...</option>
-                  {SERVICE_TYPES.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-                {errors.serviceType && (
-                  <p className="mt-[var(--spacing-1)] text-[var(--font-size-xs)] text-[var(--color-accent-red)]">
-                    {errors.serviceType}
-                  </p>
-                )}
-              </div>
-            </div>
-            <Textarea
-              label="Work Performed"
-              placeholder="Enter each task on a new line, e.g.:&#10;Oil change&#10;Filter replacement&#10;Battery test"
-              value={formData.workPerformed}
-              onChange={(e) => updateField('workPerformed', e.target.value)}
-              rows={4}
-              disabled={isLoading}
-              helperText="Enter each task on a separate line"
-            />
-          </motion.div>
-        )}
-
-        {/* VERIFICATION fields */}
-        {eventType === 1 && (
-          <motion.div key="verification" {...fadeVariants} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Verifier Name"
-                placeholder="e.g., Verification Corp"
-                value={formData.verifierName}
-                onChange={(e) => updateField('verifierName', e.target.value)}
-                error={errors.verifierName}
-                disabled={isLoading}
-              />
-              <Input
-                label="Verification Method"
-                placeholder="e.g., Serial number check"
-                value={formData.verificationMethod}
-                onChange={(e) => updateField('verificationMethod', e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <label className="block text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)] mb-[var(--spacing-1)]">
-                Verification Result
-              </label>
-              <select
-                value={formData.result}
-                onChange={(e) => updateField('result', e.target.value)}
-                disabled={isLoading}
-                className={`
-                  w-full h-9 px-[var(--spacing-3)] py-[var(--spacing-2)]
-                  bg-[var(--color-bg-secondary)] border border-transparent
-                  rounded-[var(--radius-md)] text-[var(--font-size-sm)] text-[var(--color-text-primary)]
-                  transition-all duration-[var(--transition-fast)]
-                  focus:outline-none focus:bg-[var(--color-bg-primary)]
-                  focus:border-[var(--color-border-focus)] focus:ring-1 focus:ring-[var(--color-border-focus)]
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  ${errors.result ? 'border-[var(--color-accent-red)] bg-[var(--color-accent-red-light)]' : ''}
-                `}
-              >
-                <option value="">Select result...</option>
-                {VERIFICATION_RESULTS.map((result) => (
-                  <option key={result} value={result}>{result}</option>
-                ))}
-              </select>
-              {errors.result && (
-                <p className="mt-[var(--spacing-1)] text-[var(--font-size-xs)] text-[var(--color-accent-red)]">
-                  {errors.result}
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* WARRANTY fields */}
-        {eventType === 2 && (
-          <motion.div key="warranty" {...fadeVariants} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Provider Name"
-                placeholder="e.g., Manufacturer Inc."
-                value={formData.providerName}
-                onChange={(e) => updateField('providerName', e.target.value)}
-                error={errors.providerName}
-                disabled={isLoading}
-              />
-              <div>
-                <label className="block text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)] mb-[var(--spacing-1)]">
-                  Warranty Type
-                </label>
-                <select
-                  value={formData.warrantyType}
-                  onChange={(e) => updateField('warrantyType', e.target.value)}
-                  disabled={isLoading}
-                  className={`
-                    w-full h-9 px-[var(--spacing-3)] py-[var(--spacing-2)]
-                    bg-[var(--color-bg-secondary)] border border-transparent
-                    rounded-[var(--radius-md)] text-[var(--font-size-sm)] text-[var(--color-text-primary)]
-                    transition-all duration-[var(--transition-fast)]
-                    focus:outline-none focus:bg-[var(--color-bg-primary)]
-                    focus:border-[var(--color-border-focus)] focus:ring-1 focus:ring-[var(--color-border-focus)]
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    ${errors.warrantyType ? 'border-[var(--color-accent-red)] bg-[var(--color-accent-red-light)]' : ''}
-                  `}
-                >
-                  <option value="">Select warranty type...</option>
-                  {WARRANTY_TYPES.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-                {errors.warrantyType && (
-                  <p className="mt-[var(--spacing-1)] text-[var(--font-size-xs)] text-[var(--color-accent-red)]">
-                    {errors.warrantyType}
-                  </p>
-                )}
-              </div>
-            </div>
-            <Input
-              label="Warranty Expiry Date"
-              type="date"
-              value={formData.warrantyExpiry}
-              onChange={(e) => updateField('warrantyExpiry', e.target.value)}
-              disabled={isLoading}
-            />
-            <Textarea
-              label="Claim Details"
-              placeholder="Details about the warranty claim, extension, or transfer..."
-              value={formData.claimDetails}
-              onChange={(e) => updateField('claimDetails', e.target.value)}
-              rows={3}
-              disabled={isLoading}
-            />
-          </motion.div>
-        )}
-
-        {/* CERTIFICATION fields */}
-        {eventType === 3 && (
-          <motion.div key="certification" {...fadeVariants} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Certifying Body"
-                placeholder="e.g., ISO, CE, UL"
-                value={formData.certifyingBody}
-                onChange={(e) => updateField('certifyingBody', e.target.value)}
-                error={errors.certifyingBody}
-                disabled={isLoading}
-              />
-              <Input
-                label="Certificate Number"
-                placeholder="e.g., CERT-2024-001"
-                value={formData.certificateNumber}
-                onChange={(e) => updateField('certificateNumber', e.target.value)}
-                error={errors.certificateNumber}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Certification Type"
-                placeholder="e.g., Quality, Safety, Environmental"
-                value={formData.certificationType}
-                onChange={(e) => updateField('certificationType', e.target.value)}
-                disabled={isLoading}
-              />
-              <Input
-                label="Expiry Date"
-                type="date"
-                value={formData.expiryDate}
-                onChange={(e) => updateField('expiryDate', e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* CUSTOM fields */}
-        {eventType === 4 && (
-          <motion.div key="custom" {...fadeVariants} className="space-y-4">
-            <Textarea
-              label="Additional Data (JSON)"
-              placeholder={`{
-  "customField1": "value1",
-  "customField2": "value2"
-}`}
-              value={formData.customData}
-              onChange={(e) => updateField('customData', e.target.value)}
-              error={errors.customData}
-              helperText="Optional: Enter additional data as JSON"
-              rows={4}
-              disabled={isLoading}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Notes field (common to all types) */}
+      {/* Notes */}
       <Textarea
         label="Notes (Optional)"
         placeholder="Any additional notes or comments..."
@@ -635,14 +360,33 @@ function RecordEventFormContent({ assetId, onClose, onSuccess }: RecordEventForm
         disabled={isLoading}
       />
 
-      {pendingEvidence && (
+      {/* Custom JSON data */}
+      <Textarea
+        label="Additional Data (Optional, JSON)"
+        placeholder={`{
+  "customField1": "value1",
+  "customField2": "value2"
+}`}
+        value={formData.customData}
+        onChange={(e) => updateField('customData', e.target.value)}
+        error={errors.customData}
+        helperText="Enter additional structured data as JSON"
+        rows={4}
+        disabled={isLoading}
+      />
+
+      {/* Progress indicator */}
+      {currentHash && (
         <div className="bg-blue-50 rounded-lg p-3 text-sm">
           <p className="text-blue-700">
-            ✓ Evidence created (Hash: {pendingEvidence.dataHash.slice(0, 10)}...)
+            Hash calculated: {currentHash.slice(0, 18)}...
           </p>
-          <p className="text-blue-600 mt-1">
-            Waiting for blockchain confirmation...
-          </p>
+          {isPending && (
+            <p className="text-blue-600 mt-1">Please confirm in your wallet...</p>
+          )}
+          {isConfirming && (
+            <p className="text-blue-600 mt-1">Waiting for blockchain confirmation...</p>
+          )}
         </div>
       )}
 
@@ -663,13 +407,13 @@ function RecordEventFormContent({ assetId, onClose, onSuccess }: RecordEventForm
           disabled={isLoading}
           className="flex-1"
         >
-          {isCreatingEvidence
-            ? 'Saving...'
+          {isCalculatingHash
+            ? 'Preparing...'
             : isPending
               ? 'Confirm in wallet...'
               : isConfirming
                 ? 'Recording...'
-                : 'Record Event'}
+                : 'Record Custom Event'}
         </Button>
       </div>
     </form>
@@ -693,7 +437,7 @@ export function RecordEventForm({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Record Event"
+      title="Add Custom Event"
       size="md"
     >
       {isOpen && (

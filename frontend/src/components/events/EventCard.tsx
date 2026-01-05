@@ -1,14 +1,20 @@
-import { motion } from 'framer-motion';
-import { Badge } from '@/components/common';
-import { truncateAddress, truncateHash, formatTimestamp, getEventTypeLabel, EVENT_TYPE_VARIANTS } from '@/lib';
-import type { LifecycleEvent } from '@/types';
+import { motion } from 'framer-motion'
+import { Badge } from '@/components/common'
+import {
+  truncateAddress,
+  truncateHash,
+  formatTimestamp,
+  getEventTypeLabel,
+  EVENT_TYPE_VARIANTS,
+} from '@/lib'
+import type { LifecycleEvent } from '@/types'
 
 interface EventCardProps {
-  event: LifecycleEvent;
+  event: LifecycleEvent
 }
 
 export function EventCard({ event }: EventCardProps) {
-  const variant = EVENT_TYPE_VARIANTS[event.eventType] || 'default';
+  const variant = EVENT_TYPE_VARIANTS[event.eventType] || 'default'
 
   return (
     <div className="relative">
@@ -47,7 +53,9 @@ export function EventCard({ event }: EventCardProps) {
         >
           <div className="flex justify-between items-center">
             <span className="text-gray-500">Event ID</span>
-            <span className="font-mono text-gray-700 font-medium">#{event.id?.toString()}</span>
+            <span className="font-mono text-gray-700 font-medium">
+              #{event.id?.toString()}
+            </span>
           </div>
 
           <div className="flex justify-between items-center">
@@ -66,5 +74,5 @@ export function EventCard({ event }: EventCardProps) {
         </motion.div>
       </motion.div>
     </div>
-  );
+  )
 }

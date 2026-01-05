@@ -8,11 +8,10 @@ import type {
   UpdateMintStatusRequest,
   AssetResponse,
   CreateEvidenceRequest,
-  ConfirmEvidenceRequest,
   EvidenceResponse,
-  CreateVerificationRequest,
-  VerificationRequestResponse,
   ServiceRecord,
+  CalculateHashRequest,
+  CalculateHashResponse,
 } from '@/types/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -138,15 +137,15 @@ class ApiClient {
   }
 
   // Evidence endpoints
-  async createEvidence(data: CreateEvidenceRequest): Promise<ApiResponse<EvidenceResponse>> {
-    return this.request<ApiResponse<EvidenceResponse>>('/api/evidence', {
+  async calculateEvidenceHash(data: CalculateHashRequest): Promise<ApiResponse<CalculateHashResponse>> {
+    return this.request<ApiResponse<CalculateHashResponse>>('/api/evidence/hash', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async confirmEvidence(evidenceId: number, data: ConfirmEvidenceRequest): Promise<ApiResponse<EvidenceResponse>> {
-    return this.request<ApiResponse<EvidenceResponse>>(`/api/evidence/${evidenceId}/confirm`, {
+  async createEvidence(data: CreateEvidenceRequest): Promise<ApiResponse<EvidenceResponse>> {
+    return this.request<ApiResponse<EvidenceResponse>>('/api/evidence', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -158,16 +157,6 @@ class ApiClient {
 
   async getEvidenceByHash(hash: string): Promise<ApiResponse<EvidenceResponse>> {
     return this.request<ApiResponse<EvidenceResponse>>(`/api/evidence/by-hash/${hash}`);
-  }
-
-  // Verification request endpoints
-  async createVerificationRequest(
-    data: CreateVerificationRequest
-  ): Promise<ApiResponse<VerificationRequestResponse>> {
-    return this.request<ApiResponse<VerificationRequestResponse>>('/api/verification-requests', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
   }
 
   // Service records endpoint

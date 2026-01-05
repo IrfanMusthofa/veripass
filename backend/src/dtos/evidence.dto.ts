@@ -2,18 +2,33 @@ import { z } from "zod";
 import { EventType } from "../lib/enums";
 import type { Evidence } from "../db/schema";
 
+// Schema for calculating hash only (no DB write)
+export const calculateEvidenceHashSchema = z.object({
+  assetId: z.number().int().positive(),
+  eventType: z.enum(Object.values(EventType)),
+  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  providerName: z.string().max(255).optional(),
+  description: z.string().optional(),
+  notes: z.string().optional(),
+  eventData: z.record(z.string(), z.unknown()).optional(),
+});
+
+// Schema for creating evidence
+// - If txHash is provided, it's a custom event (already on blockchain) -> create as CONFIRMED
+// - If txHash is not provided, it's oracle flow -> create as PENDING
 export const createEvidenceSchema = z.object({
   assetId: z.number().int().positive(),
   eventType: z.enum(Object.values(EventType)),
   eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   providerName: z.string().max(255).optional(),
   description: z.string().optional(),
-  eventData: z.record(z.string(), z.unknown()).optional(), // Raw JSON from user
-});
-
-export const confirmEvidenceSchema = z.object({
-  txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+  notes: z.string().optional(),
+  eventData: z.record(z.string(), z.unknown()).optional(),
+  // For custom events (frontend submits after blockchain tx)
+  txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
   blockchainEventId: z.number().int().optional(),
+  // For oracle flow (links to service record)
+  serviceRecordId: z.number().int().optional(),
 });
 
 export const evidenceIdParamSchema = z.object({
@@ -28,16 +43,21 @@ export const hashParamSchema = z.object({
   hash: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
 });
 
+export type CalculateEvidenceHashInput = z.infer<typeof calculateEvidenceHashSchema>;
 export type CreateEvidenceInput = z.infer<typeof createEvidenceSchema>;
-export type ConfirmEvidenceInput = z.infer<typeof confirmEvidenceSchema>;
 export type EvidenceIdParam = z.infer<typeof evidenceIdParamSchema>;
 export type AssetIdParam = z.infer<typeof assetIdParamSchema>;
 export type HashParam = z.infer<typeof hashParamSchema>;
+
+export interface CalculateHashResponse {
+  dataHash: string;
+}
 
 export interface EvidenceResponse {
   id: number;
   assetId: number;
   dataHash: string;
+  serviceRecordId: number | null;
   eventType: string;
   eventDate: string | null;
   providerName: string | null;
@@ -59,6 +79,7 @@ export function formatEvidenceResponse(ev: Evidence): EvidenceResponse {
     id: ev.id,
     assetId: Number(ev.assetId),
     dataHash: ev.dataHash,
+    serviceRecordId: ev.serviceRecordId ? Number(ev.serviceRecordId) : null,
     eventType: ev.eventType,
     eventDate: ev.eventDate,
     providerName: ev.providerName,
@@ -75,4 +96,3 @@ export function formatEvidenceResponse(ev: Evidence): EvidenceResponse {
     verifiedAt: ev.verifiedAt?.toISOString() || null,
   };
 }
-
