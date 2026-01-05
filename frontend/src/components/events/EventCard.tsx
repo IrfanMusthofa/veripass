@@ -4,19 +4,13 @@ import type { LifecycleEvent } from '@/types';
 
 interface EventCardProps {
   event: LifecycleEvent;
-  isLast?: boolean;
 }
 
-export function EventCard({ event, isLast = false }: EventCardProps) {
+export function EventCard({ event }: EventCardProps) {
   const variant = EVENT_TYPE_VARIANTS[event.eventType] || 'default';
 
   return (
     <div className="relative pl-8 pb-6">
-      {/* Timeline line */}
-      {!isLast && (
-        <div className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-gray-200" />
-      )}
-
       {/* Timeline dot */}
       <div className="absolute left-0 top-1.5 w-6 h-6 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center">
         <div className={`w-2.5 h-2.5 rounded-full ${event.eventType === 0 ? 'bg-blue-500' :

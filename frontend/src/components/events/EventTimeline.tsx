@@ -161,9 +161,6 @@ function EnrichedEventCard({ event }: { event: EnrichedEvent }) {
 
   return (
     <div className="relative pl-8 pb-6">
-      {/* Timeline line (always present; doesn’t depend on “last”, avoids height jumps) */}
-      <div className="absolute left-3 top-8 bottom-0 w-px bg-[var(--color-border)]" />
-
       {/* Timeline dot */}
       <div
         className={`
@@ -180,7 +177,7 @@ function EnrichedEventCard({ event }: { event: EnrichedEvent }) {
         )}
       </div>
 
-      <EventCard event={event} isLast={false} />
+      <EventCard event={event} />
 
       {evidence && (
         <div className="mt-2 ml-0 p-3 bg-[var(--color-bg-secondary)] rounded-[var(--radius-md)]">
