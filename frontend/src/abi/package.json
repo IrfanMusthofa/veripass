@@ -1,0 +1,23 @@
+{
+    "name": "@veripass/abi",
+    "version": "1.0.0",
+    "description": "VeriPass contract ABIs and addresses",
+    "main": "index.ts",
+    "types": "index.ts",
+    "exports": {
+        ".": "./index.ts",
+        "./addresses": "./addresses.ts",
+        "./types": "./types.ts"
+    },
+    "files": [
+        "*.json",
+        "*.ts"
+    ],
+    "keywords": [
+        "veripass",
+        "blockchain",
+        "contracts",
+        "abi"
+    ],
+    "license": "MIT"
+}

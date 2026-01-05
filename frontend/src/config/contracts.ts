@@ -1,9 +1,9 @@
 import type { Address } from 'viem'
 import { sepolia, hardhat } from 'wagmi/chains'
 
-// Import ABIs from shared
-import AssetPassportABI from '../../../shared/abi/AssetPassport.json'
-import EventRegistryABI from '../../../shared/abi/EventRegistry.json'
+// Import ABIs from local abi folder
+import AssetPassportABI from '@/abi/AssetPassport.json'
+import EventRegistryABI from '@/abi/EventRegistry.json'
 
 export { AssetPassportABI, EventRegistryABI }
 
