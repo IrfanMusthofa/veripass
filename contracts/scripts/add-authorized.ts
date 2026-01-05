@@ -10,12 +10,10 @@
  * Environment variables required:
  *   ASSET_PASSPORT_ADDRESS - Deployed AssetPassport contract address
  *   EVENT_REGISTRY_ADDRESS - Deployed EventRegistry contract address
- *   ADDRESS_TO_AUTHORIZE   - The address to authorize as minter and oracle
+ *
+ * The address to authorize will be prompted interactively.
  *
  * Examples:
- *   # Set the address to authorize
- *   export ADDRESS_TO_AUTHORIZE=0x1234...abcd
- *
  *   # Run on localhost
  *   npx hardhat run scripts/add-authorized.ts --network localhost
  *
@@ -24,6 +22,21 @@
  */
 
 import { ethers } from "hardhat";
+import * as readline from "readline";
+
+function prompt(question: string): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
 
 async function main() {
   console.log("\n🔐 VeriPass: Add Authorized Minter & Trusted Oracle\n");
@@ -32,9 +45,8 @@ async function main() {
   // Get contract addresses from environment
   const assetPassportAddress = process.env.ASSET_PASSPORT_ADDRESS;
   const eventRegistryAddress = process.env.EVENT_REGISTRY_ADDRESS;
-  const addressToAuthorize = process.env.ADDRESS_TO_AUTHORIZE;
 
-  // Validate inputs
+  // Validate contract addresses
   if (!assetPassportAddress) {
     throw new Error(
       "Missing ASSET_PASSPORT_ADDRESS environment variable.\n" +
@@ -49,11 +61,13 @@ async function main() {
     );
   }
 
+  // Prompt for address to authorize
+  const addressToAuthorize = await prompt(
+    "Enter address to authorize (0x...): "
+  );
+
   if (!addressToAuthorize) {
-    throw new Error(
-      "Missing ADDRESS_TO_AUTHORIZE environment variable.\n" +
-        "Set it with: export ADDRESS_TO_AUTHORIZE=0x..."
-    );
+    throw new Error("No address provided.");
   }
 
   // Validate address format
