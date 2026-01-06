@@ -115,6 +115,55 @@ src/
 └── types/              # TypeScript types
 ```
 
+## Key Hooks
+
+### API Hooks (`src/hooks/api/`)
+
+| Hook | Purpose |
+|------|---------|
+| `useAuth` | Web3 wallet authentication (nonce, sign, verify, JWT) |
+| `useAssets` | Create and fetch asset metadata |
+| `useEvidence` | Create and fetch event evidence |
+| `useBackendStatus` | Check if backend is online (30s polling) |
+| `useServiceRecords` | Fetch service records for an asset |
+
+### Contract Hooks (`src/hooks/contracts/`)
+
+| Hook | Purpose |
+|------|---------|
+| `useAssetPassport` | Mint, transfer, get passport info |
+| `useEventRegistry` | Record events, get events by asset |
+| `usePassport` | Combined passport data (info + owner + events) |
+
+### Usage Example
+
+```typescript
+import { useAssetPassport } from '@/hooks/contracts';
+import { useAssets } from '@/hooks/api';
+
+function MintPage() {
+  const { mintPassport } = useAssetPassport();
+  const { createAsset } = useAssets();
+
+  const handleMint = async (data) => {
+    // 1. Store metadata in backend, get hash
+    const { dataHash } = await createAsset(data);
+    // 2. Mint NFT with hash on-chain
+    await mintPassport(recipient, dataHash);
+  };
+}
+```
+
+## Key Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `MintPassportForm` | `components/passport/` | Asset minting form with validation |
+| `PassportDetails` | `components/passport/` | Display passport info with verification |
+| `EventTimeline` | `components/events/` | Asset lifecycle event history |
+| `VerificationBadge` | `components/verification/` | Hash verification status indicator |
+| `Button`, `Card`, `Input` | `components/common/` | Reusable UI primitives |
+
 ## Design System
 
 ### Notion-Inspired Theme
