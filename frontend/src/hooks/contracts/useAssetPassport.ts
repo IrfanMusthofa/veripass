@@ -51,6 +51,23 @@ export function usePassportOwner(tokenId: bigint | undefined, chainId: number | 
 }
 
 /**
+ * Get ownership hand (custody count) for a token
+ */
+export function usePassportHand(tokenId: bigint | undefined, chainId: number | undefined) {
+  const address = useAssetPassportAddress(chainId);
+
+  return useReadContract({
+    address,
+    abi: AssetPassportABI,
+    functionName: 'getOwnershipHand',
+    args: tokenId !== undefined ? [tokenId] : undefined,
+    query: {
+      enabled: !!address && tokenId !== undefined,
+    },
+  });
+}
+
+/**
  * Get balance (number of passports) for an address
  */
 export function useUserBalance(owner: Address | undefined, chainId: number | undefined) {

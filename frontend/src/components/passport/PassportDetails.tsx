@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useEffect, useState } from 'react';
+import { useAccount, useChainId } from 'wagmi';
 import { motion } from 'framer-motion';
 import { Card, CardBody, CardHeader, Badge, Button } from '@/components/common';
 import { Skeleton } from '@/components/design-system';
 import { VerificationBadge, VerificationDetails } from '@/components/verification';
 import { truncateAddress, formatTimestamp, truncateHash } from '@/lib';
-import { useAssetByHash, useIsBackendAvailable } from '@/hooks';
+import { useAssetByHash, useIsBackendAvailable, usePassportHand } from '@/hooks';
 import { useToast } from '@/hooks/useToast';
 import { TransferPassportForm } from './TransferPassportForm';
 import { staggerItem } from '@/lib/animations';
 import type { Passport } from '@/types';
+import InfoTooltip from '@/components/common/Tooptip';
 
 interface PassportDetailsProps {
   passport: Passport;
@@ -18,12 +19,23 @@ interface PassportDetailsProps {
 
 export function PassportDetails({ passport, onTransferSuccess }: PassportDetailsProps) {
   const { address } = useAccount();
+  const chainId = useChainId();
   const toast = useToast();
   const [showTransfer, setShowTransfer] = useState(false);
 
   const { isAvailable: isBackendAvailable } = useIsBackendAvailable();
   const { data: assetData, isLoading: isLoadingAsset } = useAssetByHash(passport.metadataHash, isBackendAvailable);
   const asset = assetData?.data;
+
+  const {
+    data: ownershipHand,
+    isLoading: isLoadingOwnershipHand,
+    error: ownershipHandError,
+  } = usePassportHand(passport.tokenId, chainId);
+
+  useEffect(() => {
+    console.log(ownershipHand)
+  }, [ownershipHand]);
 
   const isOwner = address?.toLowerCase() === passport.owner.toLowerCase();
 
@@ -139,6 +151,30 @@ export function PassportDetails({ passport, onTransferSuccess }: PassportDetails
                 <CopyButton text={passport.owner} onCopy={copyToClipboard} />
               </div>
             </div>
+
+            {/* Ownership Hand */}
+            <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
+              <span className="text-[var(--color-text-secondary)]">Ownership Hand</span>
+              {isLoadingOwnershipHand ? (
+                <Skeleton variant="text" width="80px" />
+              ) : ownershipHand ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[var(--color-text-primary)] font-medium">
+                    #{Number(ownershipHand)}
+                  </span>
+
+                  <InfoTooltip content="The initial mint is counted as the first ownership hand." />
+                </div>
+
+              ) : (
+                <span className="text-[var(--color-text-muted)]">Not available</span>
+              )}
+            </div>
+            {ownershipHandError && (
+              <p className="text-[var(--font-size-xs)] text-[var(--color-text-muted)]">
+                Unable to load ownership hand from the contract.
+              </p>
+            )}
 
             {/* Metadata Hash */}
             <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">

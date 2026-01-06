@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Web3Provider, ToastProvider, AuthProvider } from '@/providers';
 import { Layout } from '@/components/layout';
-import { HomePage } from '@/pages/HomePage';
-import { PassportsPage } from '@/pages/PassportsPage';
-import { PassportDetailsPage } from '@/pages/PassportDetailsPage';
-import { MintPage } from '@/pages/MintPage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
+import { HomePage } from '@/hooks/contracts/pages/HomePage';
+import { PassportsPage } from '@/hooks/contracts/pages/PassportsPage';
+import { PassportDetailsPage } from '@/hooks/contracts/pages/PassportDetailsPage';
+import { MintPage } from '@/hooks/contracts/pages/MintPage';
+import { NotFoundPage } from '@/hooks/contracts/pages/NotFoundPage';
 
 function App() {
   return (

@@ -1,6 +1,7 @@
 export {
   usePassportInfo,
   usePassportOwner,
+  usePassportHand,
   useUserBalance,
   useIsMinter,
   useNextTokenId,

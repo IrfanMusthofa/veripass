@@ -70,6 +70,15 @@ interface IAssetPassport {
     ) external view returns (AssetInfo memory info);
 
     /**
+     * @notice Get the ownership hand (number of custody changes) for a passport
+     * @param tokenId The passport ID
+     * @return handCount Mint counts as hand #1, each transfer increments by 1
+     */
+    function getOwnershipHand(
+        uint256 tokenId
+    ) external view returns (uint32 handCount);
+
+    /**
      * @notice Pause all token transfers
      * @dev Only callable by contract owner in emergency situations
      */

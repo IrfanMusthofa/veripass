@@ -226,6 +226,26 @@ describe("AssetPassport", function () {
                 .withArgs(user.address, other.address, 1);
         });
 
+        it("should report ownership hand starting at 1 on mint", async function () {
+            await assetPassport.mintPassport(other.address, ANOTHER_METADATA_HASH);
+
+            expect(await assetPassport.getOwnershipHand(2)).to.equal(1);
+        });
+
+        it("should increment ownership hand on every transfer", async function () {
+            expect(await assetPassport.getOwnershipHand(1)).to.equal(1);
+
+            await assetPassport
+                .connect(user)
+                .transferFrom(user.address, other.address, 1);
+            expect(await assetPassport.getOwnershipHand(1)).to.equal(2);
+
+            await assetPassport
+                .connect(other)
+                .transferFrom(other.address, user.address, 1);
+            expect(await assetPassport.getOwnershipHand(1)).to.equal(3);
+        });
+
         it("ownership history is derivable from Transfer events", async function () {
             // This test demonstrates that ownership history comes from ERC-721 Transfer events
             // No need for EventRegistry to track transfers

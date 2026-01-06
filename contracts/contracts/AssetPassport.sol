@@ -11,6 +11,7 @@ contract AssetPassport is ERC721, Ownable, Pausable, IAssetPassport {
     uint256 private _tokenIdCounter;
     mapping(uint256 => AssetInfo) private _assets;
     mapping(address => bool) private _authorizedMinters;
+    mapping(uint256 => uint32) private _ownershipHands;
 
     constructor()
         ERC721("VeriPass Asset Passport", "VPASS")
@@ -49,6 +50,15 @@ contract AssetPassport is ERC721, Ownable, Pausable, IAssetPassport {
             revert VeriPass_AssetPassport_TokenDoesNotExist(tokenId);
         }
         return _assets[tokenId];
+    }
+
+    function getOwnershipHand(
+        uint256 tokenId
+    ) external view override returns (uint32 handCount) {
+        if (_ownerOf(tokenId) == address(0)) {
+            revert VeriPass_AssetPassport_TokenDoesNotExist(tokenId);
+        }
+        return _ownershipHands[tokenId];
     }
 
     function isAuthorizedMinter(
@@ -94,7 +104,17 @@ contract AssetPassport is ERC721, Ownable, Pausable, IAssetPassport {
         address to,
         uint256 tokenId,
         address auth
-    ) internal override whenNotPaused returns (address) {
-        return super._update(to, tokenId, auth);
+    ) internal override whenNotPaused returns (address previousOwner) {
+        previousOwner = super._update(to, tokenId, auth);
+
+        if (previousOwner == address(0)) {
+            _ownershipHands[tokenId] = 1;
+        } else if (previousOwner != to) {
+            unchecked {
+                _ownershipHands[tokenId] += 1;
+            }
+        }
+
+        return previousOwner;
     }
 }
