@@ -1,0 +1,137 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#f59e0b',
+    'tertiaryColor': '#10b981',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '13px',
+    'actorLineColor': '#003366'
+  }
+}}%%
+
+sequenceDiagram
+    autonumber
+
+    participant Provider as 🏭 Service Provider
+    participant Backend as 🖥️ Backend API
+    participant DB as 🗄️ PostgreSQL
+    participant Oracle as 🔮 Oracle Worker
+    participant Wallet as 🔐 Oracle Wallet
+    participant Contract as ⛓️ EventRegistry
+    participant BC as 📦 Blockchain
+
+    %% Provider submits service record
+    rect rgb(240, 249, 255)
+        Note over Provider,DB: Phase 1: Service Record Submission
+        Provider->>+Backend: POST /api/provider/service-records<br/>X-Provider-Key: {apiKey}
+        Note right of Provider: {assetId, eventType,<br/>eventName, serviceDate,<br/>technicianName, workPerformed,<br/>partsReplaced}
+
+        Backend->>Backend: Validate provider API key
+        Backend->>DB: Check asset exists
+        DB-->>Backend: Asset found
+
+        Backend->>DB: INSERT service_records_provider_a<br/>recordId: "SR-{timestamp}-{random}"<br/>verified: true
+
+        DB-->>Backend: Record created
+        Backend-->>-Provider: 201 Created<br/>{recordId, status: "submitted"}
+    end
+
+    %% Oracle polling loop
+    rect rgb(255, 251, 235)
+        Note over Oracle,DB: Phase 2: Oracle Polling (every 15-30s)
+
+        loop Every POLL_INTERVAL
+            Oracle->>+DB: SELECT unprocessed records<br/>LEFT JOIN processed_service_records<br/>WHERE processed.id IS NULL
+
+            alt No new records
+                DB-->>Oracle: Empty result
+                Note over Oracle: Log "." and continue
+            else New records found
+                DB-->>-Oracle: Unprocessed service records
+
+                %% Process each record
+                loop For each record
+                    rect rgb(254, 243, 199)
+                        Note over Oracle,BC: Phase 3: Record Processing
+
+                        Oracle->>DB: INSERT processed_service_records<br/>status: "PROCESSING"
+
+                        Oracle->>Oracle: Validate record.verified == true
+
+                        alt Record not verified
+                            Oracle->>DB: UPDATE status: "FAILED"<br/>errorMessage: "Not verified by provider"
+                        else Record is verified
+                            %% Build evidence data
+                            Oracle->>Oracle: Build evidence payload<br/>{assetId, eventType, eventDate,<br/>providerName, description,<br/>eventData: {eventName, technician,<br/>workPerformed, partsReplaced}}
+
+                            %% Calculate hash
+                            Oracle->>Oracle: calculateHash(payload)<br/>Sort keys alphabetically<br/>JSON.stringify()<br/>keccak256()
+
+                            Note over Oracle: dataHash = 0x...
+
+                            %% Sign hash
+                            Oracle->>+Wallet: signMessage(dataHash)
+                            Wallet-->>-Oracle: signature (65 bytes)
+
+                            %% Map event type
+                            Oracle->>Oracle: Map eventType string to enum<br/>MAINTENANCE → 0<br/>VERIFICATION → 1<br/>WARRANTY → 2<br/>CERTIFICATION → 3
+
+                            %% Submit to blockchain
+                            rect rgb(220, 252, 231)
+                                Note over Oracle,BC: Phase 4: Blockchain Submission
+
+                                Oracle->>+Contract: recordVerifiedEvent(<br/>  assetId,<br/>  eventType,<br/>  dataHash,<br/>  signature<br/>)
+
+                                Contract->>Contract: Verify msg.sender is trusted oracle
+                                Contract->>Contract: Verify eventType != CUSTOM
+                                Contract->>Contract: Verify dataHash != bytes32(0)
+                                Contract->>Contract: Verify signature.length > 0
+
+                                Contract->>BC: Store LifecycleEvent<br/>{id, assetId, eventType,<br/>submitter, timestamp, dataHash}
+
+                                Contract->>Contract: Emit EventRecorded(...)
+
+                                Contract-->>-Oracle: Transaction receipt<br/>{txHash, logs}
+
+                                Oracle->>Oracle: Extract eventId from logs
+                            end
+
+                            %% Create evidence record
+                            rect rgb(237, 233, 254)
+                                Note over Oracle,DB: Phase 5: Evidence Creation
+
+                                Oracle->>DB: INSERT evidence<br/>assetId, dataHash,<br/>serviceRecordId,<br/>eventType, eventDate,<br/>providerName, description,<br/>eventData,<br/>status: "CONFIRMED",<br/>isVerified: true,<br/>verifiedBy: oracleAddress,<br/>blockchainEventId,<br/>txHash
+
+                                DB-->>Oracle: evidenceId
+                            end
+
+                            %% Update processing status
+                            Oracle->>DB: UPDATE processed_service_records<br/>status: "COMPLETED"<br/>evidenceId, blockchainEventId,<br/>txHash, processedAt: now()
+
+                            Note over Oracle: ✅ Record processed successfully
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    %% Error handling
+    rect rgb(254, 226, 226)
+        Note over Oracle,DB: Error Handling
+
+        alt Transaction fails
+            Contract--xOracle: Transaction reverted
+            Oracle->>DB: UPDATE processed_service_records<br/>status: "FAILED"<br/>errorMessage: revert reason
+        else Database error
+            DB--xOracle: Connection error
+            Oracle->>Oracle: Log error, retry next poll
+        else Insufficient balance
+            Wallet--xOracle: Insufficient funds
+            Oracle->>Oracle: Log warning, skip record
+        end
+    end

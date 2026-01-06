@@ -1,0 +1,102 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#4a90d9',
+    'tertiaryColor': '#f0f4f8',
+    'lineColor': '#003366',
+    'fontFamily': 'Times New Roman, serif',
+    'fontSize': '14px'
+  }
+}}%%
+
+flowchart TB
+    subgraph USERS["User Layer"]
+        direction LR
+        OWNER["Asset Owner"]
+        PROVIDER["Service Provider"]
+    end
+
+    subgraph FRONTEND["Frontend Layer (React + Vite)"]
+        direction TB
+        WEB3["Web3 Integration<br/><small>wagmi + RainbowKit</small>"]
+        UI["User Interface<br/><small>Passport View, Mint Form</small>"]
+        HASH_FE["Hash Computation<br/><small>keccak256</small>"]
+    end
+
+    subgraph BACKEND["Backend Layer (Hono.js)"]
+        direction TB
+        API["REST API<br/><small>/api/assets, /api/evidence</small>"]
+        AUTH["Authentication<br/><small>JWT + Web3 Signature</small>"]
+        HASH_BE["Hash Verification<br/><small>keccak256</small>"]
+    end
+
+    subgraph DATABASE["Data Layer (PostgreSQL)"]
+        direction LR
+        ASSETS[("assets")]
+        EVIDENCE[("evidence")]
+        RECORDS[("service_records")]
+    end
+
+    subgraph ORACLE["Oracle Layer"]
+        direction TB
+        WORKER["Polling Worker<br/><small>Every 15s</small>"]
+        SIGNER["Transaction Signer<br/><small>ethers.js</small>"]
+    end
+
+    subgraph BLOCKCHAIN["Blockchain Layer (EVM)"]
+        direction LR
+        PASSPORT["AssetPassport<br/><small>ERC-721 NFT</small>"]
+        REGISTRY["EventRegistry<br/><small>Lifecycle Events</small>"]
+    end
+
+    subgraph SHARED["Shared Layer"]
+        ABI["Contract ABIs<br/><small>TypeScript Types</small>"]
+    end
+
+    %% User connections
+    OWNER --> UI
+    PROVIDER -->|"X-Provider-Key"| API
+
+    %% Frontend connections
+    UI --> WEB3
+    UI --> HASH_FE
+    WEB3 <-->|"JSON-RPC"| BLOCKCHAIN
+    UI <-->|"REST"| API
+
+    %% Backend connections
+    API --> AUTH
+    API --> HASH_BE
+    API <--> DATABASE
+
+    %% Oracle connections
+    WORKER -->|"Poll"| RECORDS
+    WORKER --> SIGNER
+    SIGNER -->|"recordVerifiedEvent"| REGISTRY
+    SIGNER -->|"Update status"| EVIDENCE
+
+    %% Blockchain connections
+    PASSPORT <-.->|"validates"| REGISTRY
+
+    %% Shared usage
+    ABI -.->|"import"| FRONTEND
+    ABI -.->|"import"| ORACLE
+
+    %% Styling
+    classDef userStyle fill:#e5e7eb,stroke:#374151,stroke-width:2px,color:#111827
+    classDef frontendStyle fill:#dbeafe,stroke:#1d4ed8,stroke-width:2px,color:#1e3a8a
+    classDef backendStyle fill:#d1fae5,stroke:#059669,stroke-width:2px,color:#065f46
+    classDef dbStyle fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6
+    classDef oracleStyle fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#92400e
+    classDef blockchainStyle fill:#e0e7ff,stroke:#4338ca,stroke-width:2px,color:#312e81
+    classDef sharedStyle fill:#f3f4f6,stroke:#6b7280,stroke-width:1px,color:#374151
+
+    class USERS,OWNER,PROVIDER userStyle
+    class FRONTEND,WEB3,UI,HASH_FE frontendStyle
+    class BACKEND,API,AUTH,HASH_BE backendStyle
+    class DATABASE,ASSETS,EVIDENCE,RECORDS dbStyle
+    class ORACLE,WORKER,SIGNER oracleStyle
+    class BLOCKCHAIN,PASSPORT,REGISTRY blockchainStyle
+    class SHARED,ABI sharedStyle

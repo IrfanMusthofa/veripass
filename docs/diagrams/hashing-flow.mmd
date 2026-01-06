@@ -1,0 +1,115 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#6366f1',
+    'tertiaryColor': '#f0f4f8',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '13px'
+  }
+}}%%
+
+flowchart TB
+    subgraph INPUT["📥 Input Data"]
+        direction TB
+        RAW["Raw Metadata Object<br/><i>Unordered keys</i>"]
+        EXAMPLE1["<code>{<br/>  model: 'iPhone 15',<br/>  assetId: 1,<br/>  manufacturer: 'Apple',<br/>  serialNumber: 'XYZ123'<br/>}</code>"]
+    end
+
+    subgraph SORT["🔄 Step 1: Recursive Key Sorting"]
+        direction TB
+        SORT_DESC["Sort all object keys<br/>alphabetically at every level"]
+        SORTED["<code>{<br/>  assetId: 1,<br/>  manufacturer: 'Apple',<br/>  model: 'iPhone 15',<br/>  serialNumber: 'XYZ123'<br/>}</code>"]
+        SORT_CODE["<i>sortKeysRecursively(obj)</i>"]
+    end
+
+    subgraph SERIALIZE["📝 Step 2: JSON Serialization"]
+        direction TB
+        SERIAL_DESC["Convert to JSON string<br/>No whitespace, consistent format"]
+        JSON_STR["<code>'{\"assetId\":1,\"manufacturer\":\"Apple\",<br/>\"model\":\"iPhone 15\",\"serialNumber\":\"XYZ123\"}'</code>"]
+        SERIAL_CODE["<i>JSON.stringify(sortedObj)</i>"]
+    end
+
+    subgraph ENCODE["🔤 Step 3: UTF-8 Encoding"]
+        direction TB
+        ENCODE_DESC["Convert string to byte array<br/>UTF-8 encoding standard"]
+        BYTES["<code>Uint8Array [123, 34, 97, 115, ...]</code>"]
+        ENCODE_CODE["<i>ethers.toUtf8Bytes(jsonStr)</i>"]
+    end
+
+    subgraph HASH["#️⃣ Step 4: Keccak256 Hashing"]
+        direction TB
+        HASH_DESC["Apply SHA-3 (Keccak256)<br/>256-bit cryptographic hash"]
+        HASH_RESULT["<code>0x7a8f3b2c1d4e5f6a7b8c9d0e1f2a3b4c<br/>5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a</code>"]
+        HASH_CODE["<i>ethers.keccak256(bytes)</i>"]
+    end
+
+    subgraph OUTPUT["📤 Output"]
+        direction TB
+        FINAL["32-byte Hexadecimal String<br/><b>66 characters (0x + 64 hex)</b>"]
+    end
+
+    subgraph VERIFY["✅ Verification Process"]
+        direction LR
+        OFF_CHAIN["Off-chain Hash<br/><i>Computed from metadata</i>"]
+        ON_CHAIN["On-chain Hash<br/><i>Stored in contract</i>"]
+        COMPARE{"Compare"}
+        MATCH["✅ VERIFIED<br/><i>Data intact</i>"]
+        MISMATCH["❌ MISMATCH<br/><i>Data tampered</i>"]
+    end
+
+    subgraph PROPERTIES["🔐 Keccak256 Properties"]
+        direction TB
+        PROP1["<b>Deterministic</b><br/>Same input → Same output"]
+        PROP2["<b>Collision Resistant</b><br/>Infeasible to find two inputs<br/>with same hash"]
+        PROP3["<b>Avalanche Effect</b><br/>1-bit change → 50% bits flip"]
+        PROP4["<b>One-way</b><br/>Cannot reverse to get input"]
+    end
+
+    %% Flow connections
+    RAW --> SORT_DESC
+    EXAMPLE1 -.-> RAW
+    SORT_DESC --> SORTED
+    SORT_CODE -.-> SORT_DESC
+
+    SORTED --> SERIAL_DESC
+    SERIAL_DESC --> JSON_STR
+    SERIAL_CODE -.-> SERIAL_DESC
+
+    JSON_STR --> ENCODE_DESC
+    ENCODE_DESC --> BYTES
+    ENCODE_CODE -.-> ENCODE_DESC
+
+    BYTES --> HASH_DESC
+    HASH_DESC --> HASH_RESULT
+    HASH_CODE -.-> HASH_DESC
+
+    HASH_RESULT --> FINAL
+
+    FINAL --> OFF_CHAIN
+    OFF_CHAIN --> COMPARE
+    ON_CHAIN --> COMPARE
+    COMPARE -->|"=="| MATCH
+    COMPARE -->|"!="| MISMATCH
+
+    %% Styling
+    classDef inputStyle fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0c4a6e
+    classDef stepStyle fill:#f0f9ff,stroke:#003366,stroke-width:2px,color:#003366
+    classDef outputStyle fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#166534
+    classDef verifyStyle fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#92400e
+    classDef propStyle fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px,color:#5b21b6
+    classDef matchStyle fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#166534
+    classDef mismatchStyle fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#991b1b
+    classDef codeStyle fill:#f1f5f9,stroke:#64748b,stroke-width:1px,color:#475569,font-style:italic
+
+    class INPUT inputStyle
+    class SORT,SERIALIZE,ENCODE,HASH stepStyle
+    class OUTPUT outputStyle
+    class VERIFY verifyStyle
+    class PROPERTIES propStyle
+    class MATCH matchStyle
+    class MISMATCH mismatchStyle
+    class SORT_CODE,SERIAL_CODE,ENCODE_CODE,HASH_CODE codeStyle

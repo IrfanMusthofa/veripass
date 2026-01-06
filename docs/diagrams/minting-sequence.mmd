@@ -1,0 +1,127 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#4a90d9',
+    'tertiaryColor': '#10b981',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '13px',
+    'actorLineColor': '#003366',
+    'noteBkgColor': '#f0f9ff',
+    'noteTextColor': '#003366',
+    'noteBorderColor': '#003366'
+  }
+}}%%
+
+sequenceDiagram
+    autonumber
+
+    participant User as 👤 User
+    participant Frontend as ⚛️ React Frontend
+    participant Wallet as 🦊 MetaMask
+    participant Backend as 🖥️ Backend API
+    participant DB as 🗄️ PostgreSQL
+    participant Contract as ⛓️ AssetPassport
+    participant BC as 📦 Blockchain
+
+    %% Phase 1: Form Input & Hash Computation
+    rect rgb(240, 249, 255)
+        Note over User,Frontend: Phase 1: Metadata Input
+
+        User->>+Frontend: Fill mint form
+        Note right of User: manufacturer, model,<br/>serialNumber, manufacturedDate,<br/>description, images[]
+
+        Frontend->>Frontend: Validate form inputs
+        Frontend->>Frontend: calculateHash(metadata)<br/>1. Sort keys alphabetically<br/>2. JSON.stringify()<br/>3. keccak256()
+
+        Note over Frontend: metadataHash = 0x7a8f...
+    end
+
+    %% Phase 2: Backend Storage
+    rect rgb(236, 253, 245)
+        Note over Frontend,DB: Phase 2: Off-chain Storage
+
+        Frontend->>+Backend: POST /api/assets<br/>Authorization: Bearer {JWT}
+        Note right of Frontend: {assetId, manufacturer,<br/>model, serialNumber,<br/>manufacturedDate, description,<br/>images, metadata}
+
+        Backend->>Backend: authMiddleware<br/>Verify JWT token
+        Backend->>Backend: calculateHash(metadata)<br/>Verify hash consistency
+
+        Backend->>+DB: INSERT INTO assets<br/>mintStatus: 'PENDING'<br/>dataHash: computed hash
+        DB-->>-Backend: Asset created (id: 1)
+
+        Backend-->>-Frontend: 201 Created<br/>{id, assetId, dataHash, mintStatus}
+    end
+
+    %% Phase 3: Blockchain Transaction
+    rect rgb(254, 249, 195)
+        Note over Frontend,BC: Phase 3: On-chain Minting
+
+        Frontend->>Frontend: Prepare contract call<br/>useWriteContract hook
+
+        Frontend->>+Wallet: Request signature<br/>mintPassport(to, metadataHash)
+
+        Wallet->>User: Confirm transaction?<br/>Gas: ~185,000
+        User->>Wallet: Approve
+
+        Wallet->>+Contract: mintPassport(<br/>  to: userAddress,<br/>  metadataHash: 0x7a8f...<br/>)
+
+        Contract->>Contract: require(authorizedMinter<br/>|| owner())
+        Contract->>Contract: _tokenIdCounter++
+        Contract->>Contract: _safeMint(to, tokenId)
+        Contract->>Contract: _assets[tokenId] = AssetInfo{<br/>  metadataHash,<br/>  mintTimestamp: block.timestamp,<br/>  isActive: true<br/>}
+        Contract->>Contract: _ownershipHand[tokenId] = 1
+
+        Contract->>BC: Store state changes
+        Contract->>Contract: emit PassportMinted(<br/>  tokenId, owner, metadataHash<br/>)
+
+        Contract-->>-Wallet: Transaction hash
+        Wallet-->>-Frontend: txHash: 0xabc...
+    end
+
+    %% Phase 4: Confirmation & Status Update
+    rect rgb(237, 233, 254)
+        Note over Frontend,DB: Phase 4: Confirmation
+
+        Frontend->>Frontend: Wait for confirmation<br/>useWaitForTransactionReceipt
+
+        loop Poll for receipt
+            Frontend->>BC: eth_getTransactionReceipt
+            BC-->>Frontend: null (pending)
+        end
+
+        BC-->>Frontend: Receipt confirmed<br/>status: 1 (success)
+
+        Frontend->>+Backend: PATCH /api/assets/{assetId}/mint-status
+        Note right of Frontend: {status: 'MINTED',<br/>txHash: '0xabc...'}
+
+        Backend->>Backend: Verify requester is creator
+        Backend->>+DB: UPDATE assets<br/>mintStatus = 'MINTED'<br/>txHash = '0xabc...'<br/>mintedAt = NOW()
+        DB-->>-Backend: Updated
+
+        Backend-->>-Frontend: 200 OK<br/>{mintStatus: 'MINTED'}
+
+        Frontend->>User: Success!<br/>Passport minted: Token #1
+    end
+
+    %% Error Handling
+    rect rgb(254, 226, 226)
+        Note over User,Contract: Error Scenarios
+
+        alt Unauthorized minter
+            Contract--xWallet: Revert: "Not authorized"
+            Wallet--xFrontend: Transaction failed
+            Frontend->>User: Error: Not authorized to mint
+        else Insufficient gas
+            Wallet--xUser: Insufficient funds for gas
+        else Transaction reverted
+            Contract--xWallet: Revert reason
+            Frontend->>+Backend: PATCH status: 'FAILED'
+            Backend->>DB: UPDATE mintStatus = 'FAILED'
+            Backend-->>-Frontend: Updated
+            Frontend->>User: Minting failed
+        end
+    end

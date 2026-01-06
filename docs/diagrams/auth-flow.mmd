@@ -1,0 +1,169 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#8b5cf6',
+    'tertiaryColor': '#10b981',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '13px',
+    'actorLineColor': '#003366',
+    'noteBkgColor': '#f5f3ff',
+    'noteTextColor': '#003366',
+    'noteBorderColor': '#8b5cf6'
+  }
+}}%%
+
+sequenceDiagram
+    autonumber
+
+    participant User as 👤 User
+    participant Frontend as ⚛️ React Frontend
+    participant RK as 🌈 RainbowKit
+    participant Wallet as 🦊 MetaMask
+    participant Backend as 🖥️ Backend API
+    participant DB as 🗄️ PostgreSQL
+
+    %% Phase 1: Wallet Connection
+    rect rgb(245, 243, 255)
+        Note over User,Wallet: Phase 1: Wallet Connection
+
+        User->>+Frontend: Click "Connect Wallet"
+
+        Frontend->>+RK: Open wallet modal
+
+        RK->>User: Select wallet provider
+        User->>RK: Choose MetaMask
+
+        RK->>+Wallet: Request connection
+        Wallet->>User: Approve connection?
+        User->>Wallet: Approve
+
+        Wallet-->>-RK: Connected<br/>address: 0x1234...
+
+        RK-->>-Frontend: Wallet connected
+        Frontend-->>-User: Wallet connected<br/>Display: 0x1234...abcd
+    end
+
+    %% Phase 2: Authentication Request
+    rect rgb(240, 249, 255)
+        Note over Frontend,DB: Phase 2: Request Nonce
+
+        Frontend->>Frontend: useAccount() hook<br/>Get connected address
+
+        Frontend->>+Backend: POST /api/auth/nonce<br/>Content-Type: application/json
+        Note right of Frontend: { address: "0x1234..." }
+
+        Backend->>Backend: Validate address format<br/>(42 chars, starts with 0x)
+
+        Backend->>Backend: Generate random nonce<br/>crypto.randomBytes(32)
+
+        Backend->>+DB: UPSERT auth_nonces<br/>address, nonce, expiresAt
+        Note right of Backend: expiresAt = NOW() + 5 min
+
+        DB-->>-Backend: Nonce stored
+
+        Backend-->>-Frontend: 200 OK<br/>{ nonce: "0x9a8b7c..." }
+    end
+
+    %% Phase 3: Message Signing
+    rect rgb(254, 249, 195)
+        Note over Frontend,Wallet: Phase 3: Sign Authentication Message
+
+        Frontend->>Frontend: Construct message
+        Note over Frontend: "Sign this message to<br/>authenticate with VeriPass\n\n<br/>Nonce: 0x9a8b7c...\n<br/>Timestamp: 2024-01-15T10:30:00Z"
+
+        Frontend->>+Wallet: signMessage(message)
+        Note right of Frontend: wagmi useSignMessage hook
+
+        Wallet->>User: Sign message?<br/>Display message content
+        User->>Wallet: Sign
+
+        Wallet->>Wallet: ECDSA signature<br/>using private key
+
+        Wallet-->>-Frontend: signature: 0xabcd...
+        Note over Frontend: 65-byte signature<br/>(r, s, v)
+    end
+
+    %% Phase 4: Verification & JWT
+    rect rgb(236, 253, 245)
+        Note over Frontend,DB: Phase 4: Verify & Issue JWT
+
+        Frontend->>+Backend: POST /api/auth/verify
+        Note right of Frontend: { address, message, signature }
+
+        Backend->>Backend: Parse nonce from message
+
+        Backend->>+DB: SELECT * FROM auth_nonces<br/>WHERE address = ?
+        DB-->>-Backend: { nonce, expiresAt }
+
+        alt Nonce expired
+            Backend-->>Frontend: 401 Unauthorized<br/>"Nonce expired"
+        else Nonce not found
+            Backend-->>Frontend: 401 Unauthorized<br/>"Invalid nonce"
+        else Valid nonce
+            Backend->>Backend: ethers.verifyMessage(<br/>  message, signature<br/>)
+            Note over Backend: Recovers signer address
+
+            alt Address mismatch
+                Backend-->>Frontend: 401 Unauthorized<br/>"Signature mismatch"
+            else Address matches
+                Backend->>+DB: DELETE FROM auth_nonces<br/>WHERE address = ?
+                Note right of Backend: One-time use nonce
+                DB-->>-Backend: Deleted
+
+                Backend->>Backend: Generate JWT<br/>payload: { address }<br/>expiry: 7 days
+
+                Backend-->>-Frontend: 200 OK<br/>{ token: "eyJ...", address }
+            end
+        end
+    end
+
+    %% Phase 5: Token Storage & Usage
+    rect rgb(237, 233, 254)
+        Note over Frontend,User: Phase 5: Token Management
+
+        Frontend->>Frontend: localStorage.setItem(<br/>  'veripass_token', token<br/>)
+
+        Frontend->>Frontend: AuthContext update<br/>isAuthenticated: true<br/>user: { address }
+
+        Frontend->>User: Authentication success!<br/>Redirect to dashboard
+    end
+
+    %% Subsequent Requests
+    rect rgb(240, 249, 255)
+        Note over Frontend,Backend: Subsequent API Requests
+
+        loop Every authenticated request
+            Frontend->>+Backend: GET /api/assets<br/>Authorization: Bearer {JWT}
+
+            Backend->>Backend: authMiddleware<br/>jwt.verify(token, secret)
+
+            alt Token valid
+                Backend->>Backend: Extract address from payload
+                Backend->>Backend: Set c.set('userAddress', address)
+                Backend-->>-Frontend: 200 OK + data
+            else Token expired/invalid
+                Backend-->>Frontend: 401 Unauthorized
+                Frontend->>Frontend: Clear localStorage
+                Frontend->>User: Session expired<br/>Please sign in again
+            end
+        end
+    end
+
+    %% Logout
+    rect rgb(254, 226, 226)
+        Note over User,Frontend: Logout
+
+        User->>+Frontend: Click "Disconnect"
+
+        Frontend->>Frontend: localStorage.removeItem(<br/>  'veripass_token'<br/>)
+
+        Frontend->>RK: Disconnect wallet
+
+        Frontend->>Frontend: AuthContext reset<br/>isAuthenticated: false<br/>user: null
+
+        Frontend-->>-User: Logged out
+    end

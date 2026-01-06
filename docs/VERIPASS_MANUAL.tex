@@ -1,0 +1,673 @@
+\documentclass[12pt, a4paper]{report}
+
+% PACKAGES
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage[indonesian]{babel}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{palatino}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+
+% GEOMETRY
+\geometry{
+    a4paper,
+    total={170mm,257mm},
+    left=20mm,
+    top=20mm,
+}
+\setlength{\headheight}{15pt}
+
+% COLORS
+\definecolor{primary}{HTML}{003366}
+
+% TITLE PAGE
+\title{
+    \vspace{2cm}
+    \hrule
+    \vspace{0.5cm}
+    {\Huge \bfseries \color{primary} VeriPass} \\
+    \vspace{0.3cm}
+    {\large \it Sistem Verifikasi Aset Berbasis Blockchain} \\
+    \vspace{2cm}
+    \hrule
+    \vspace{2cm}
+    {\Large Manual Book} \\
+    \vspace*{\fill}
+}
+\author{}
+\date{Januari 2026}
+
+% HEADERS AND FOOTERS
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% CHAPTER STYLING
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{primary}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-50pt}{40pt}
+
+% SECTION STYLING
+\titleformat{\section}{\normalfont\Large\bfseries\color{primary}}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+% CODE LISTING STYLE
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\lstdefinelanguage{Solidity}{
+  keywords={abstract, after, alias, anonymous, apply, as, assembly, assert, assign,
+            auto, break, case, catch, constant, continue, contract, default, define,
+            defined, delete, deploy, do, else, enum, event, external, fallback,
+            final, for, function, global, goto, if, immutable, implements, import,
+            in, indexed, inlined, internal, is, let, library, mapping, memory,
+            modifier, new, override, payable, pragma, private, public, pure,
+            receive, return, returns, sealed, sizeof, static, storage, struct,
+            super, switch, template, this, throw, transient, try, type, typeof,
+            unchecked, using, view, virtual, while, with},
+  keywordstyle=\color{blue}\bfseries,
+  keywords=[2]{address, bool, bytes, bytes1, bytes2, bytes3, bytes4, bytes5, bytes6,
+               bytes7, bytes8, bytes9, bytes10, bytes11, bytes12, bytes13, bytes14,
+               bytes15, bytes16, bytes17, bytes18, bytes19, bytes20, bytes21,
+               bytes22, bytes23, bytes24, bytes25, bytes26, bytes27, bytes28,
+               bytes29, bytes30, bytes31, bytes32, int, int8, int16, int24, int32,
+               int40, int48, int56, int64, int72, int80, int88, int96, int104,
+               int112, int120, int128, int136, int144, int152, int160, int168,
+               int176, int184, int192, int200, int208, int216, int224, int232,
+               int240, int248, int256, string, uint, uint8, uint16, uint24,
+               uint32, uint40, uint48, uint56, uint64, uint72, uint80, uint88,
+               uint96, uint104, uint112, uint120, uint128, uint136, int144,
+               uint152, int160, int168, uint176, int184, int192, int200,
+               int208, int216, int224, int232, int240, int248, int256},
+  keywordstyle=[2]\color{teal}\bfseries,
+  keywords=[3]{block, msg, tx, blockhash, gasleft, now, selfdestruct, sha256,
+               sha3, ripemd160, ecrecover, addmod, mulmod, keccak256, abi,
+               super, this, true, false, owner, require, revert, balance,
+               send, emit},
+  keywordstyle=[3]\color{violet}\bfseries,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  morestring=[b]",
+  sensitive=true
+}
+
+\lstdefinelanguage{TypeScript}{
+  keywords={abstract, any, as, async, await, boolean, break, case, catch, class, const, constructor, continue, debugger, declare, default, delete, do, else, enum, export, extends, false, finally, for, from, function, get, if, implements, import, in, infer, instanceof, interface, is, keyof, let, module, namespace, never, new, null, number, object, of, package, private, protected, public, readonly, require, return, set, static, string, super, switch, symbol, this, throw, true, try, type, typeof, undefined, unique, unknown, var, void, while, with, yield},
+  keywordstyle=\color{blue}\bfseries,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codepurple},
+  morestring=[b]',
+  morestring=[b]",
+  morestring=[b]`,
+  sensitive=true
+}
+
+% DOCUMENT START
+\begin{document}
+
+\maketitle
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ============================================================
+% CHAPTER 1: PENJELASAN UMUM
+% ============================================================
+\chapter{Penjelasan Umum}
+
+\section{Deskripsi Singkat Sistem}
+VeriPass adalah sistem verifikasi aset berbasis blockchain yang menciptakan paspor digital anti-manipulasi untuk aset fisik menggunakan standar ERC-721 NFT. Sistem ini dirancang untuk memberikan bukti kepemilikan dan riwayat aset yang transparan, terdesentralisasi, dan dapat diverifikasi secara kriptografis.
+
+Setiap aset fisik direpresentasikan sebagai NFT unik pada blockchain Ethereum, dengan hash metadata yang tersimpan secara permanen. Integritas data dijamin melalui perbandingan hash on-chain dan off-chain, memastikan setiap modifikasi data dapat terdeteksi.
+
+\section{Tujuan Manual}
+Dokumen ini bertujuan sebagai panduan teknis komprehensif untuk:
+\begin{enumerate}
+    \item Memahami arsitektur dan komponen sistem VeriPass
+    \item Melakukan instalasi dan konfigurasi sistem secara lengkap
+    \item Mengoperasikan fitur-fitur utama aplikasi
+    \item Memahami aspek keamanan dan praktik terbaik penggunaan
+\end{enumerate}
+
+\section{Gambaran Umum Fungsionalitas}
+VeriPass menyediakan fungsionalitas utama berikut:
+\begin{itemize}
+    \item \textbf{Minting Paspor Aset} -- Pembuatan NFT unik untuk setiap aset fisik dengan metadata terverifikasi
+    \item \textbf{Verifikasi Integritas} -- Perbandingan hash on-chain dan off-chain untuk memastikan data tidak dimanipulasi
+    \item \textbf{Pencatatan Event} -- Riwayat lengkap lifecycle aset termasuk maintenance, sertifikasi, dan transfer kepemilikan
+    \item \textbf{Oracle Integration} -- Verifikasi otomatis service record dari provider terpercaya
+    \item \textbf{Web3 Authentication} -- Autentikasi berbasis wallet untuk keamanan maksimal
+\end{itemize}
+\clearpage
+\section{Komponen Utama Sistem}
+Sistem VeriPass terdiri dari empat komponen utama yang saling terintegrasi, sebagaimana diilustrasikan pada Gambar \ref{fig:arch}.
+
+\begin{enumerate}
+    \item \textbf{Frontend} -- Aplikasi React dengan RainbowKit untuk koneksi wallet dan wagmi untuk interaksi smart contract
+    \item \textbf{Backend} -- Server Hono.js dengan PostgreSQL database, menyediakan REST API dan autentikasi JWT
+    \item \textbf{Smart Contracts} -- Kontrak Solidity pada blockchain Ethereum (AssetPassport dan EventRegistry)
+    \item \textbf{Oracle} -- Worker service yang memproses service record terverifikasi dan mencatatnya ke blockchain
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{manual_images/architecture-overview.png}
+    \caption{Arsitektur Sistem VeriPass}
+    \label{fig:arch}
+\end{figure}
+
+% ============================================================
+% CHAPTER 2: RANGKA PERANGKAT LUNAK
+% ============================================================
+\chapter{Rangka Perangkat Lunak}
+
+\section{Struktur Umum Sistem}
+VeriPass menggunakan arsitektur three-tier yang memisahkan presentasi, logika bisnis, dan penyimpanan data. Teknologi yang digunakan dirangkum dalam Tabel \ref{tab:tech}.
+
+\begin{table}[h!]
+    \centering
+    \caption{Stack Teknologi VeriPass}
+    \label{tab:tech}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Kategori} & \textbf{Teknologi} \\
+        \midrule
+        Frontend & React, Vite, RainbowKit, wagmi \\
+        Backend & Hono.js, Drizzle ORM \\
+        Database & PostgreSQL \\
+        Blockchain & Solidity, Hardhat, ethers.js \\
+        Runtime & Bun \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Direktori \texttt{shared/} berfungsi sebagai satu-satunya sumber ABI kontrak yang digunakan bersama oleh frontend dan backend. Setelah perubahan kontrak, ABI harus di-export ulang menggunakan script \texttt{export-abi.ts}.
+
+\section{Smart Contract}
+
+\subsection{AssetPassport}
+Kontrak \texttt{AssetPassport} mengimplementasikan standar ERC-721 untuk merepresentasikan paspor aset sebagai NFT. Fitur utama meliputi:
+
+\begin{itemize}
+    \item \textbf{Minting dengan Metadata Hash} -- Setiap passport menyimpan hash keccak256 dari metadata off-chain
+    \item \textbf{Authorized Minters} -- Hanya alamat terotorisasi atau owner yang dapat melakukan minting
+    \item \textbf{Ownership Tracking} -- Counter \texttt{ownershipHands} melacak berapa kali aset berpindah tangan
+    \item \textbf{Emergency Controls} -- Fungsi pause/unpause untuk kondisi darurat
+\end{itemize}
+\clearpage
+Fungsi-fungsi utama kontrak dirangkum pada Tabel \ref{tab:asset-func}.
+
+\begin{table}[h!]
+    \centering
+    \caption{Fungsi Utama AssetPassport}
+    \label{tab:asset-func}
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        \textbf{Fungsi} & \textbf{Deskripsi} \\
+        \midrule
+        \texttt{mintPassport} & Minting passport baru dengan metadata hash \\
+        \texttt{getAssetInfo} & Mengambil informasi asset (hash, timestamp, status) \\
+        \texttt{getOwnershipHand} & Mengembalikan jumlah perpindahan kepemilikan \\
+        \texttt{addAuthorizedMinter} & Menambah alamat sebagai authorized minter \\
+        \texttt{deactivatePassport} & Menonaktifkan passport (aset hilang/dicuri) \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{EventRegistry}
+Kontrak \texttt{EventRegistry} berfungsi sebagai append-only log untuk mencatat seluruh event lifecycle aset. Tipe event yang didukung:
+
+\begin{itemize}
+    \item \texttt{MAINTENANCE} (0) -- Service, repair, inspeksi
+    \item \texttt{VERIFICATION} (1) -- Verifikasi keaslian oleh oracle
+    \item \texttt{WARRANTY} (2) -- Klaim dan perpanjangan garansi
+    \item \texttt{CERTIFICATION} (3) -- Sertifikasi pihak ketiga
+    \item \texttt{CUSTOM} (4) -- Event kustom dari pengguna
+\end{itemize}
+
+Terdapat dua jalur pencatatan event:
+\begin{enumerate}
+    \item \textbf{User Events} (\texttt{recordEvent}) -- Disubmit langsung oleh pemilik aset, bersifat unverified
+    \item \textbf{Oracle Events} (\texttt{recordVerifiedEvent}) -- Disubmit oleh trusted oracle dengan signature, bersifat verified
+\end{enumerate}
+
+\section{Oracle}
+Oracle adalah background worker yang menjembatani data off-chain dengan on-chain. Proses kerja oracle:
+
+\begin{enumerate}
+    \item Polling database setiap 15-30 detik untuk service record baru
+    \item Memvalidasi record yang sudah diverifikasi oleh provider
+    \item Menghitung hash deterministik dari data event
+    \item Menandatangani hash dengan wallet oracle
+    \item Submit ke kontrak EventRegistry sebagai verified event
+    \item Update status record: PENDING $\rightarrow$ PROCESSING $\rightarrow$ COMPLETED/FAILED
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\linewidth,height=0.85\textheight,keepaspectratio]{manual_images/oracle-flow.png}
+    \caption{Alur Pemrosesan Oracle}
+    \label{fig:oracle}
+\end{figure}
+
+\section{Backend}
+Backend dibangun dengan Hono.js dan menyediakan REST API untuk operasi berikut:
+
+\begin{itemize}
+    \item \textbf{Authentication} -- Web3 signature-based auth (nonce $\rightarrow$ sign $\rightarrow$ verify $\rightarrow$ JWT)
+    \item \textbf{Asset Management} -- CRUD operasi untuk metadata aset
+    \item \textbf{Evidence Tracking} -- Pencatatan dan query event/evidence
+    \item \textbf{Provider Integration} -- API untuk service provider eksternal
+\end{itemize}
+
+Endpoint utama API dirangkum pada Tabel \ref{tab:api}.
+
+\begin{table}[h!]
+    \centering
+    \caption{Endpoint API Utama}
+    \label{tab:api}
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{Method} & \textbf{Endpoint} & \textbf{Deskripsi} \\
+        \midrule
+        POST & /api/auth/nonce & Request nonce untuk signing \\
+        POST & /api/auth/verify & Verifikasi signature, dapatkan JWT \\
+        POST & /api/assets & Buat asset baru \\
+        GET & /api/assets/:id & Query asset by ID \\
+        POST & /api/evidence & Catat evidence baru \\
+        GET & /api/evidence/asset/:id & Query evidence by asset \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Frontend}
+Frontend React menggunakan arsitektur berbasis hooks dengan pemisahan jelas antara API hooks dan contract hooks:
+
+\begin{itemize}
+    \item \textbf{/hooks/api/} -- TanStack Query hooks untuk komunikasi dengan backend
+    \item \textbf{/hooks/contracts/} -- wagmi hooks untuk interaksi smart contract
+\end{itemize}
+
+Halaman utama aplikasi:
+\begin{itemize}
+    \item \textbf{HomePage} -- Landing page dengan informasi sistem
+    \item \textbf{PassportsPage} -- Daftar semua passport yang di-mint
+    \item \textbf{MintPage} -- Form untuk minting passport baru
+    \item \textbf{PassportDetailsPage} -- Detail passport dengan verification dan event timeline
+\end{itemize}
+
+Frontend mendukung \textbf{graceful degradation} -- tetap beroperasi dalam mode offline ketika backend tidak tersedia, dengan fitur terbatas pada operasi blockchain langsung.
+
+\section{Pattern dan Data Flow}
+
+\subsection{Data Integrity Pattern}
+Integritas data dijamin melalui hash kriptografis:
+\begin{enumerate}
+    \item Metadata di-hash menggunakan keccak256 dengan key sorting deterministik
+    \item Hash disimpan on-chain saat minting
+    \item Verifikasi dilakukan dengan membandingkan hash on-chain vs computed hash dari data off-chain
+    \item Mismatch mengindikasikan data telah dimodifikasi
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{manual_images/data-flow.png}
+    \caption{Alur Data dan Verifikasi}
+    \label{fig:dataflow}
+\end{figure}
+
+\subsection{Authentication Flow}
+\begin{enumerate}
+    \item User menghubungkan wallet via RainbowKit
+    \item Frontend request nonce dari backend
+    \item User menandatangani message berisi nonce
+    \item Backend memverifikasi signature, issue JWT token (valid 7 hari)
+    \item Token digunakan untuk autentikasi request selanjutnya
+\end{enumerate}
+
+% ============================================================
+% CHAPTER 3: SETUP
+% ============================================================
+\chapter{Setup}
+
+\section{Persiapan dan Konfigurasi}
+Prasyarat sistem yang diperlukan:
+\begin{itemize}
+    \item Node.js v18+ atau Bun runtime
+    \item PostgreSQL database
+    \item Git untuk version control
+    \item MetaMask atau wallet Web3 lainnya
+\end{itemize}
+
+Clone repository dan install dependencies:
+\begin{lstlisting}[language=bash]
+git clone <repository-url>
+cd veripass
+\end{lstlisting}
+
+\section{Menjalankan Smart Contract}
+Navigasi ke direktori contracts dan jalankan local blockchain:
+
+\begin{lstlisting}[language=bash]
+cd contracts
+bun install
+bun hardhat compile              # Compile kontrak
+bun hardhat node                 # Jalankan local node (port 8545)
+\end{lstlisting}
+
+Pada terminal terpisah, deploy kontrak:
+\begin{lstlisting}[language=bash]
+bun hardhat run scripts/deploy.ts --network localhost
+bun hardhat run scripts/export-abi.ts    # Export ABI ke shared/
+\end{lstlisting}
+
+Konfigurasi MetaMask untuk testing lokal:
+\begin{itemize}
+    \item RPC URL: \texttt{http://127.0.0.1:8545}
+    \item Chain ID: 31337
+    \item Test private key tersedia dari output Hardhat node
+\end{itemize}
+
+\section{Menjalankan Oracle}
+Oracle memerlukan konfigurasi environment variable:
+
+\begin{lstlisting}[language=bash]
+# Di file backend/.env
+ORACLE_API_KEY=<min-32-char-key>
+ORACLE_PRIVATE_KEY=0x<64-char-hex>
+POLL_INTERVAL=30000
+EVENT_REGISTRY_ADDRESS=<deployed-address>
+\end{lstlisting}
+
+Jalankan oracle worker:
+\begin{lstlisting}[language=bash]
+cd backend
+bun run dev:oracle
+\end{lstlisting}
+
+Oracle akan mendaftarkan alamatnya dan mulai polling untuk service record baru.
+
+\section{Menjalankan Backend}
+Setup database dan jalankan server:
+
+\begin{lstlisting}[language=bash]
+cd backend
+cp .env.example .env             # Salin dan edit konfigurasi
+bun install
+bun run db:push                  # Push schema ke database
+bun run db:seed                  # (Opsional) Seed test data
+bun run dev                      # Jalankan server (port 3000)
+\end{lstlisting}
+
+Environment variables yang diperlukan:
+\begin{lstlisting}[language=bash]
+DB_URL=postgresql://user:pass@localhost:5432/veripass
+JWT_SECRET=<min-32-char-secret>
+FRONTEND_URL=http://localhost:5173
+ASSET_PASSPORT_ADDRESS=<deployed-address>
+EVENT_REGISTRY_ADDRESS=<deployed-address>
+\end{lstlisting}
+
+\section{Menjalankan Frontend}
+Setup dan jalankan development server:
+
+\begin{lstlisting}[language=bash]
+cd frontend
+cp .env.example .env             # Salin dan edit konfigurasi
+bun install
+bun run dev                      # Jalankan server (port 5173)
+\end{lstlisting}
+
+Environment variables frontend:
+\begin{lstlisting}[language=bash]
+VITE_API_URL=http://localhost:3000
+VITE_WALLETCONNECT_PROJECT_ID=<project-id>
+VITE_ASSET_PASSPORT_ADDRESS=<deployed-address>
+VITE_EVENT_REGISTRY_ADDRESS=<deployed-address>
+\end{lstlisting}
+
+\section{Urutan Eksekusi Keseluruhan}
+Untuk menjalankan sistem lengkap, ikuti urutan berikut:
+
+\begin{enumerate}
+    \item \textbf{Database} -- Pastikan PostgreSQL berjalan
+    \item \textbf{Blockchain} -- Jalankan Hardhat node, deploy kontrak
+    \item \textbf{Backend} -- Push schema, jalankan server
+    \item \textbf{Oracle} -- Jalankan worker (opsional, untuk verified events)
+    \item \textbf{Frontend} -- Jalankan dev server
+\end{enumerate}
+
+Verifikasi instalasi dengan mengakses \url{http://localhost:5173} dan menghubungkan wallet.
+
+% ============================================================
+% CHAPTER 4: PENGGUNAAN
+% ============================================================
+\chapter{Penggunaan}
+
+\section{Asset Minting}
+Proses minting passport aset baru:
+
+\begin{enumerate}
+    \item Hubungkan wallet melalui tombol Connect pada header
+    \item Navigasi ke halaman Mint
+    \item Isi form dengan data aset:
+    \begin{itemize}
+        \item Alamat penerima (recipient address)
+        \item Manufacturer dan model
+        \item Serial number
+        \item Tanggal manufaktur
+        \item Deskripsi (opsional)
+    \end{itemize}
+    \item Klik tombol Mint
+    \item Konfirmasi transaksi di wallet
+    \item Tunggu konfirmasi blockchain
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\linewidth]{manual_images/ui-mint-form.png}
+    \caption{Form Minting Passport}
+    \label{fig:mint}
+\end{figure}
+
+Sistem akan:
+\begin{itemize}
+    \item Menghitung hash deterministik dari metadata
+    \item Menyimpan metadata ke database dengan status PENDING
+    \item Submit transaksi minting ke blockchain
+    \item Update status ke MINTED setelah konfirmasi
+\end{itemize}
+
+\section{Asset Viewing dan Verification}
+Melihat dan memverifikasi passport:
+
+\begin{enumerate}
+    \item Navigasi ke halaman Passports untuk melihat daftar semua passport
+    \item Klik passport untuk melihat detail
+    \item Perhatikan \textbf{Verification Badge}:
+    \begin{itemize}
+        \item \textcolor{green}{\textbf{Verified}} -- Hash on-chain cocok dengan off-chain
+        \item \textcolor{orange}{\textbf{Pending}} -- Menunggu konfirmasi
+        \item \textcolor{red}{\textbf{Mismatch}} -- Hash tidak cocok, data mungkin dimodifikasi
+    \end{itemize}
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{manual_images/ui-passport-detail.png}
+    \caption{Detail Passport dengan Verification Badge}
+    \label{fig:detail}
+\end{figure}
+
+Informasi yang ditampilkan pada halaman detail:
+\begin{itemize}
+    \item Metadata aset (manufacturer, model, serial number)
+    \item Status verifikasi dengan perbandingan hash
+    \item Owner address saat ini
+    \item Ownership hands (jumlah perpindahan)
+    \item Timestamp minting
+    \item Event timeline
+\end{itemize}
+\clearpage
+\section{Verified Event}
+Terdapat dua cara mencatat event pada passport:
+
+\subsection{Custom Event (User-Submitted)}
+Event yang dicatat langsung oleh pemilik aset:
+
+\begin{enumerate}
+    \item Buka halaman detail passport
+    \item Klik tombol ``Record Event''
+    \item Isi form event:
+    \begin{itemize}
+        \item Tipe event (Custom)
+        \item Deskripsi
+        \item Tanggal event
+        \item Data tambahan (JSON)
+    \end{itemize}
+    \item Konfirmasi transaksi di wallet
+\end{enumerate}
+
+Custom event bersifat \textbf{unverified} dan ditandai pada timeline.
+
+\subsection{Oracle-Verified Event}
+Event yang diverifikasi oleh oracle dari service provider:
+
+\begin{enumerate}
+    \item Service provider submit record via Provider API
+    \item Oracle secara otomatis polling record baru
+    \item Oracle memverifikasi dan menandatangani data
+    \item Event dicatat ke blockchain sebagai verified
+    \item Event muncul di timeline dengan badge verified
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{manual_images/ui-event-timeline.png}
+    \caption{Event Timeline dengan Filter}
+    \label{fig:timeline}
+\end{figure}
+
+Event timeline mendukung filtering berdasarkan tipe:
+\begin{itemize}
+    \item Maintenance
+    \item Verification
+    \item Warranty
+    \item Certification
+    \item Custom
+\end{itemize}
+
+% ============================================================
+% CHAPTER 5: LAIN-LAIN
+% ============================================================
+\chapter{Lain-lain}
+
+\section{Catatan Keamanan}
+Aspek keamanan yang perlu diperhatikan:
+
+\subsection{Private Key Management}
+\begin{itemize}
+    \item \textbf{Jangan pernah} membagikan private key wallet
+    \item Gunakan hardware wallet untuk aset bernilai tinggi
+    \item Backup seed phrase di lokasi aman dan offline
+\end{itemize}
+
+\subsection{Smart Contract Security}
+\begin{itemize}
+    \item Kontrak menggunakan OpenZeppelin library yang sudah diaudit
+    \item Implementasi Pausable untuk emergency stop
+    \item Access control dengan Ownable dan authorized minters pattern
+    \item Input validation untuk mencegah zero address dan invalid hash
+\end{itemize}
+
+\subsection{Backend Security}
+\begin{itemize}
+    \item JWT secret minimal 32 karakter
+    \item Nonce expiry 5 menit untuk mencegah replay attack
+    \item CORS dikonfigurasi hanya untuk frontend URL
+    \item API key hashing untuk provider authentication
+\end{itemize}
+
+\subsection{Data Integrity}
+\begin{itemize}
+    \item Selalu verifikasi hash on-chain sebelum mempercayai data off-chain
+    \item Perhatikan warning jika terdapat hash mismatch
+    \item Oracle signature memastikan keaslian verified events
+\end{itemize}
+\clearpage
+\section{Kesimpulan dan Saran}
+VeriPass menyediakan solusi verifikasi aset yang transparan dan tamper-proof dengan memanfaatkan teknologi blockchain. Sistem ini cocok untuk:
+
+\begin{itemize}
+    \item Tracking aset bernilai tinggi (kendaraan, elektronik, barang koleksi)
+    \item Sertifikasi dan maintenance record
+    \item Proof of ownership dan transfer history
+    \item Audit trail yang tidak dapat dimanipulasi
+\end{itemize}
+
+\subsection{Saran Pengembangan}
+\begin{enumerate}
+    \item \textbf{Multi-chain Support} -- Deploy ke multiple blockchain untuk redundansi
+    \item \textbf{IPFS Integration} -- Simpan metadata lengkap di IPFS untuk desentralisasi penuh
+    \item \textbf{Mobile App} -- Aplikasi mobile untuk scanning dan verifikasi cepat
+    \item \textbf{Provider Network} -- Ekspansi jaringan service provider terverifikasi
+\end{enumerate}
+
+% ============================================================
+% APPENDIX
+% ============================================================
+\appendix
+
+\chapter{Source Code Smart Contract}
+
+\section{AssetPassport.sol}
+\lstinputlisting[language=Solidity, caption={AssetPassport.sol}]{../contracts/contracts/AssetPassport.sol}
+
+\section{EventRegistry.sol}
+\lstinputlisting[language=Solidity, caption={EventRegistry.sol}]{../contracts/contracts/EventRegistry.sol}
+
+\chapter{Database Schema}
+\lstinputlisting[language=TypeScript, caption={Database Schema (Drizzle ORM)}]{../backend/src/db/schema.ts}
+
+\end{document}

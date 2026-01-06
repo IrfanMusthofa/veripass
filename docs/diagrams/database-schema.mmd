@@ -1,0 +1,107 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#7c3aed',
+    'tertiaryColor': '#f0f4f8',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '12px'
+  }
+}}%%
+
+erDiagram
+    ASSETS ||--o{ EVIDENCE : "has"
+    ASSETS ||--o{ SERVICE_RECORDS_PROVIDER_A : "has"
+    SERVICE_RECORDS_PROVIDER_A ||--o| PROCESSED_SERVICE_RECORDS : "processed_by"
+    SERVICE_RECORDS_PROVIDER_A ||--o| EVIDENCE : "creates"
+    SERVICE_PROVIDERS ||--o{ SERVICE_RECORDS_PROVIDER_A : "submits"
+
+    ASSETS {
+        serial id PK "Auto-increment primary key"
+        bigint assetId UK "Blockchain token ID"
+        varchar_66 dataHash UK "keccak256 metadata hash"
+        varchar_255 manufacturer "Asset manufacturer"
+        varchar_255 model "Asset model name"
+        varchar_255 serialNumber UK "Unique serial number"
+        varchar_10 manufacturedDate "YYYY-MM-DD format"
+        text description "Asset description"
+        jsonb images "Array of image URLs"
+        jsonb metadata "Additional metadata"
+        varchar_20 mintStatus "PENDING|MINTED|FAILED"
+        varchar_66 txHash "Minting transaction hash"
+        varchar_42 createdBy "Creator wallet address"
+        timestamp createdAt "Record creation time"
+        timestamp mintedAt "Blockchain mint time"
+    }
+
+    EVIDENCE {
+        serial id PK "Auto-increment primary key"
+        bigint assetId FK "Reference to assets"
+        varchar_66 dataHash UK "keccak256 event hash"
+        bigint serviceRecordId FK "Source service record"
+        varchar_20 eventType "MAINTENANCE|VERIFICATION|WARRANTY|CERTIFICATION|CUSTOM"
+        varchar_10 eventDate "YYYY-MM-DD format"
+        varchar_255 providerName "Service provider name"
+        text description "Event description"
+        jsonb eventData "Structured event details"
+        varchar_20 status "PENDING|CONFIRMED"
+        boolean isVerified "Oracle verified flag"
+        varchar_42 verifiedBy "Oracle wallet address"
+        bigint blockchainEventId "On-chain event ID"
+        varchar_66 txHash "Transaction hash"
+        varchar_42 createdBy "Creator wallet address"
+        timestamp createdAt "Record creation time"
+        timestamp confirmedAt "Blockchain confirmation"
+        timestamp verifiedAt "Oracle verification time"
+    }
+
+    SERVICE_PROVIDERS {
+        serial id PK "Auto-increment primary key"
+        varchar_255 providerId UK "Unique provider ID"
+        varchar_255 providerName "Display name"
+        varchar_50 providerType "manufacturer|service_center|inspector"
+        boolean isTrusted "Trust status"
+        varchar_128 apiKeyHash "Hashed API key"
+        timestamp createdAt "Registration time"
+    }
+
+    SERVICE_RECORDS_PROVIDER_A {
+        serial id PK "Auto-increment primary key"
+        varchar_255 recordId UK "Unique record ID"
+        bigint assetId FK "Reference to assets"
+        varchar_255 providerId FK "Provider reference"
+        varchar_20 eventType "MAINTENANCE|VERIFICATION|WARRANTY|CERTIFICATION"
+        varchar_255 eventName "Event title"
+        varchar_10 serviceDate "YYYY-MM-DD format"
+        varchar_255 technicianName "Technician name"
+        text technicianNotes "Service notes"
+        jsonb workPerformed "Array of work items"
+        jsonb partsReplaced "Array of parts"
+        boolean verified "Provider verified"
+        timestamp createdAt "Record creation"
+        timestamp updatedAt "Last update"
+    }
+
+    PROCESSED_SERVICE_RECORDS {
+        serial id PK "Auto-increment primary key"
+        bigint serviceRecordId FK UK "Source service record"
+        varchar_255 providerId "Provider reference"
+        varchar_20 status "PENDING|PROCESSING|COMPLETED|FAILED"
+        bigint evidenceId "Created evidence ID"
+        bigint blockchainEventId "On-chain event ID"
+        varchar_66 txHash "Transaction hash"
+        text errorMessage "Failure reason"
+        timestamp createdAt "Queue entry time"
+        timestamp processedAt "Processing completion"
+    }
+
+    AUTH_NONCES {
+        serial id PK "Auto-increment primary key"
+        varchar_42 address UK "Wallet address"
+        varchar_66 nonce "Random 32-byte hex"
+        timestamp expiresAt "5-minute TTL"
+        timestamp createdAt "Nonce creation time"
+    }

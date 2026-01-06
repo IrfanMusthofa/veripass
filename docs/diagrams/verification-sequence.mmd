@@ -1,0 +1,124 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#10b981',
+    'tertiaryColor': '#ef4444',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '13px',
+    'actorLineColor': '#003366',
+    'noteBkgColor': '#ecfdf5',
+    'noteTextColor': '#003366',
+    'noteBorderColor': '#10b981'
+  }
+}}%%
+
+sequenceDiagram
+    autonumber
+
+    participant User as 👤 User
+    participant Frontend as ⚛️ React Frontend
+    participant Backend as 🖥️ Backend API
+    participant DB as 🗄️ PostgreSQL
+    participant Contract as ⛓️ AssetPassport
+    participant BC as 📦 Blockchain
+
+    %% Phase 1: User Request
+    rect rgb(240, 249, 255)
+        Note over User,Frontend: Phase 1: Navigate to Passport Details
+
+        User->>+Frontend: Click passport card<br/>/passports/{tokenId}
+
+        Frontend->>Frontend: useParams()<br/>Extract tokenId from URL
+    end
+
+    %% Phase 2: Parallel Data Fetching
+    rect rgb(236, 253, 245)
+        Note over Frontend,BC: Phase 2: Parallel Data Fetching
+
+        par Fetch Off-chain Metadata
+            Frontend->>+Backend: GET /api/assets/{assetId}
+            Backend->>+DB: SELECT * FROM assets<br/>WHERE assetId = {assetId}
+            DB-->>-Backend: Asset metadata
+            Backend-->>-Frontend: {manufacturer, model,<br/>serialNumber, description,<br/>images, dataHash, mintStatus}
+        and Fetch On-chain Data
+            Frontend->>+Contract: getAssetInfo(tokenId)
+            Contract->>BC: Read storage
+            BC-->>Contract: AssetInfo struct
+            Contract-->>-Frontend: {metadataHash,<br/>mintTimestamp, isActive}
+        and Fetch Ownership Info
+            Frontend->>+Contract: ownerOf(tokenId)
+            Contract-->>-Frontend: ownerAddress
+            Frontend->>+Contract: getOwnershipHand(tokenId)
+            Contract-->>-Frontend: handCount (uint32)
+        end
+    end
+
+    %% Phase 3: Hash Verification
+    rect rgb(254, 249, 195)
+        Note over Frontend,Frontend: Phase 3: Integrity Verification
+
+        Frontend->>Frontend: Extract metadata fields<br/>{assetId, manufacturer, model,<br/>serialNumber, manufacturedDate,<br/>description}
+
+        Frontend->>Frontend: calculateHash(metadata)<br/>1. sortKeysRecursively()<br/>2. JSON.stringify()<br/>3. ethers.keccak256()<br/>4. toUtf8Bytes()
+
+        Note over Frontend: computedHash = 0x7a8f...
+
+        Frontend->>Frontend: Compare hashes
+        Note over Frontend: onChainHash vs computedHash
+    end
+
+    %% Phase 4: Verification Result
+    rect rgb(237, 233, 254)
+        Note over Frontend,User: Phase 4: Display Result
+
+        alt Hashes Match (Verified)
+            Frontend->>Frontend: verificationStatus = "VERIFIED"
+            Frontend->>User: Display green badge<br/>"Data Verified on Blockchain"
+            Note over User: Shows checkmark icon<br/>with verification details
+        else Hashes Don't Match (Tampered)
+            Frontend->>Frontend: verificationStatus = "MISMATCH"
+            Frontend->>User: Display red warning<br/>"Data Integrity Compromised"
+            Note over User: Shows warning icon<br/>with mismatch details
+        else No On-chain Data (Pending)
+            Frontend->>Frontend: verificationStatus = "PENDING"
+            Frontend->>User: Display yellow badge<br/>"Awaiting Blockchain Confirmation"
+            Note over User: Shows clock icon<br/>minting in progress
+        else Asset Inactive (Revoked)
+            Frontend->>Frontend: verificationStatus = "INACTIVE"
+            Frontend->>User: Display gray badge<br/>"Passport Deactivated"
+            Note over User: Shows revoked status
+        end
+    end
+
+    %% Phase 5: Display Additional Info
+    rect rgb(240, 249, 255)
+        Note over Frontend,User: Phase 5: Additional Information
+
+        Frontend->>User: Display Asset Details
+        Note right of Frontend: Manufacturer, Model<br/>Serial Number<br/>Manufactured Date<br/>Description<br/>Images Gallery
+
+        Frontend->>User: Display Blockchain Info
+        Note right of Frontend: Token ID<br/>Owner Address<br/>Ownership Hand #<br/>Mint Timestamp<br/>Transaction Hash
+
+        Frontend->>User: Display Events Timeline
+        Note right of Frontend: MAINTENANCE events<br/>VERIFICATION events<br/>CERTIFICATION events<br/>CUSTOM events
+    end
+
+    %% Graceful Degradation
+    rect rgb(254, 226, 226)
+        Note over Frontend,Backend: Graceful Degradation (Offline Mode)
+
+        alt Backend Unavailable
+            Backend--xFrontend: Connection refused
+            Frontend->>User: Limited View Mode
+            Note over User: Shows only on-chain data:<br/>- Token ID<br/>- Owner<br/>- Metadata Hash<br/>- No detailed metadata
+        else Contract Not Deployed
+            Contract--xFrontend: Contract not found
+            Frontend->>User: Blockchain Unavailable
+            Note over User: Shows cached data only
+        end
+    end

@@ -1,0 +1,164 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#4a90d9',
+    'secondaryTextColor': '#ffffff',
+    'tertiaryColor': '#f0f4f8',
+    'tertiaryTextColor': '#333333',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '14px'
+  }
+}}%%
+
+flowchart TB
+    subgraph USER["👤 User Layer"]
+        direction LR
+        BROWSER["🌐 Web Browser"]
+        WALLET["🦊 MetaMask / Web3 Wallet"]
+    end
+
+    subgraph FRONTEND["⚛️ Frontend (React + Vite)"]
+        direction TB
+
+        subgraph PROVIDERS["Providers"]
+            WEB3P["Web3Provider<br/><i>wagmi + RainbowKit</i>"]
+            AUTHP["AuthProvider<br/><i>JWT State</i>"]
+            TOASTP["ToastProvider"]
+        end
+
+        subgraph PAGES["Pages"]
+            HOME["HomePage"]
+            PASSPORTS["PassportsPage"]
+            MINT["MintPage"]
+            DETAILS["PassportDetailsPage"]
+        end
+
+        subgraph HOOKS["Hooks"]
+            API_HOOKS["📡 /hooks/api/<br/><i>TanStack Query</i>"]
+            CONTRACT_HOOKS["⛓️ /hooks/contracts/<br/><i>wagmi hooks</i>"]
+        end
+
+        subgraph COMPONENTS["Components"]
+            PASSPORT_COMP["PassportCard<br/>MintForm<br/>TransferForm"]
+            EVENT_COMP["EventTimeline<br/>RecordEventForm"]
+            VERIFY_COMP["VerificationBadge<br/>VerificationDetails"]
+        end
+    end
+
+    subgraph BACKEND["🖥️ Backend (Hono.js)"]
+        direction TB
+
+        subgraph MIDDLEWARE["Middleware"]
+            CORS["CORS"]
+            AUTH_MW["authMiddleware<br/><i>JWT Verify</i>"]
+            FLEX_MW["flexibleAuthMiddleware<br/><i>JWT or Oracle Key</i>"]
+        end
+
+        subgraph ROUTES["REST API Routes"]
+            AUTH_R["/api/auth<br/><i>nonce, verify, me</i>"]
+            ASSET_R["/api/assets<br/><i>CRUD operations</i>"]
+            EVIDENCE_R["/api/evidence<br/><i>hash, create, query</i>"]
+            PROVIDER_R["/api/provider<br/><i>service records</i>"]
+        end
+
+        subgraph SERVICES["Services"]
+            AUTH_S["AuthService"]
+            ASSET_S["AssetService"]
+            EVIDENCE_S["EvidenceService"]
+            HASH_S["HashService<br/><i>keccak256</i>"]
+        end
+    end
+
+    subgraph DATABASE["🗄️ PostgreSQL"]
+        direction LR
+        ASSETS_T[("assets")]
+        EVIDENCE_T[("evidence")]
+        SERVICE_T[("service_records<br/>_provider_a")]
+        PROCESSED_T[("processed_<br/>service_records")]
+        NONCES_T[("auth_nonces")]
+    end
+
+    subgraph ORACLE["🔮 Oracle Worker"]
+        direction TB
+        POLLER["Polling Service<br/><i>every 15-30s</i>"]
+        VERIFIER["Verifier<br/><i>validate & sign</i>"]
+        BC_CLIENT["Blockchain Client<br/><i>ethers.js</i>"]
+    end
+
+    subgraph BLOCKCHAIN["⛓️ Ethereum Blockchain"]
+        direction TB
+
+        subgraph CONTRACTS["Smart Contracts"]
+            PASSPORT_C["📜 AssetPassport<br/><i>ERC-721 NFT</i>"]
+            REGISTRY_C["📜 EventRegistry<br/><i>Lifecycle Events</i>"]
+        end
+
+        subgraph ON_CHAIN["On-Chain Data"]
+            NFT_DATA["Token Ownership<br/>Metadata Hash<br/>Mint Timestamp"]
+            EVENT_DATA["Event Records<br/>Data Hashes<br/>Oracle Signatures"]
+        end
+    end
+
+    subgraph SHARED["📦 shared/"]
+        ABI["Contract ABIs<br/><i>AssetPassport.json</i><br/><i>EventRegistry.json</i>"]
+        TYPES["TypeScript Types<br/><i>AssetInfo, EventType</i>"]
+    end
+
+    %% User connections
+    BROWSER <--> FRONTEND
+    WALLET <--> WEB3P
+
+    %% Frontend internal
+    PROVIDERS --> PAGES
+    PAGES --> COMPONENTS
+    COMPONENTS --> HOOKS
+
+    %% Frontend to Backend
+    API_HOOKS <-->|"REST API<br/>JWT Auth"| ROUTES
+
+    %% Frontend to Blockchain
+    CONTRACT_HOOKS <-->|"JSON-RPC<br/>Web3"| CONTRACTS
+
+    %% Backend internal
+    MIDDLEWARE --> ROUTES
+    ROUTES --> SERVICES
+
+    %% Backend to Database
+    SERVICES <-->|"Drizzle ORM"| DATABASE
+
+    %% Oracle connections
+    POLLER -->|"Poll unprocessed"| DATABASE
+    POLLER --> VERIFIER
+    VERIFIER -->|"Sign & Submit"| BC_CLIENT
+    BC_CLIENT <-->|"recordVerifiedEvent"| REGISTRY_C
+    BC_CLIENT -->|"Update status"| PROCESSED_T
+
+    %% Blockchain internal
+    PASSPORT_C --> NFT_DATA
+    REGISTRY_C --> EVENT_DATA
+    PASSPORT_C <-.->|"validates asset"| REGISTRY_C
+
+    %% Shared usage
+    SHARED -.->|"import"| CONTRACT_HOOKS
+    SHARED -.->|"import"| BC_CLIENT
+
+    %% Styling
+    classDef userStyle fill:#e8f4fd,stroke:#003366,stroke-width:2px,color:#003366
+    classDef frontendStyle fill:#4a90d9,stroke:#003366,stroke-width:2px,color:#fff
+    classDef backendStyle fill:#2d6a4f,stroke:#1b4332,stroke-width:2px,color:#fff
+    classDef dbStyle fill:#7c3aed,stroke:#5b21b6,stroke-width:2px,color:#fff
+    classDef oracleStyle fill:#d97706,stroke:#92400e,stroke-width:2px,color:#fff
+    classDef blockchainStyle fill:#003366,stroke:#001a33,stroke-width:2px,color:#fff
+    classDef sharedStyle fill:#6b7280,stroke:#374151,stroke-width:2px,color:#fff
+
+    class USER userStyle
+    class FRONTEND,PROVIDERS,PAGES,HOOKS,COMPONENTS frontendStyle
+    class BACKEND,MIDDLEWARE,ROUTES,SERVICES backendStyle
+    class DATABASE,ASSETS_T,EVIDENCE_T,SERVICE_T,PROCESSED_T,NONCES_T dbStyle
+    class ORACLE,POLLER,VERIFIER,BC_CLIENT oracleStyle
+    class BLOCKCHAIN,CONTRACTS,ON_CHAIN,PASSPORT_C,REGISTRY_C,NFT_DATA,EVENT_DATA blockchainStyle
+    class SHARED,ABI,TYPES sharedStyle

@@ -1,0 +1,145 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#f59e0b',
+    'tertiaryColor': '#10b981',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '12px'
+  }
+}}%%
+
+classDiagram
+    direction TB
+
+    class ERC721 {
+        <<OpenZeppelin>>
+        +balanceOf(address) uint256
+        +ownerOf(uint256) address
+        +safeTransferFrom(address, address, uint256)
+        +transferFrom(address, address, uint256)
+        +approve(address, uint256)
+        +getApproved(uint256) address
+        +setApprovalForAll(address, bool)
+        +isApprovedForAll(address, address) bool
+        #_safeMint(address, uint256)
+        #_burn(uint256)
+    }
+
+    class Ownable {
+        <<OpenZeppelin>>
+        -address _owner
+        +owner() address
+        +transferOwnership(address)
+        +renounceOwnership()
+        #_checkOwner()
+    }
+
+    class Pausable {
+        <<OpenZeppelin>>
+        -bool _paused
+        +paused() bool
+        +pause()
+        +unpause()
+        #_requireNotPaused()
+    }
+
+    class AssetPassport {
+        <<ERC-721 NFT>>
+        -uint256 _tokenIdCounter
+        -mapping~uint256 => AssetInfo~ _assets
+        -mapping~uint256 => uint32~ _ownershipHand
+        -mapping~address => bool~ _authorizedMinters
+        +mintPassport(address to, bytes32 metadataHash) uint256
+        +getAssetInfo(uint256 tokenId) AssetInfo
+        +getOwnershipHand(uint256 tokenId) uint32
+        +addAuthorizedMinter(address minter)
+        +removeAuthorizedMinter(address minter)
+        +isAuthorizedMinter(address account) bool
+        +deactivatePassport(uint256 tokenId)
+        +pause()
+        +unpause()
+        #_update(address to, uint256 tokenId, address auth) address
+    }
+
+    class AssetInfo {
+        <<struct>>
+        +bytes32 metadataHash
+        +uint40 mintTimestamp
+        +bool isActive
+    }
+
+    class EventRegistry {
+        <<Append-Only Log>>
+        -uint256 _eventCounter
+        -address _assetPassport
+        -mapping~uint256 => LifecycleEvent~ _events
+        -mapping~uint256 => uint256[]~ _assetEvents
+        -mapping~address => bool~ _trustedOracles
+        +recordEvent(uint256 assetId, EventType eventType, bytes32 dataHash) uint256
+        +recordVerifiedEvent(uint256 assetId, EventType eventType, bytes32 dataHash, bytes signature) uint256
+        +getEvent(uint256 eventId) LifecycleEvent
+        +getEventsByAsset(uint256 assetId) LifecycleEvent[]
+        +getEventsByType(uint256 assetId, EventType eventType) LifecycleEvent[]
+        +getEventCount(uint256 assetId) uint256
+        +addTrustedOracle(address oracle)
+        +removeTrustedOracle(address oracle)
+        +isTrustedOracle(address account) bool
+        +setAssetPassport(address passport)
+    }
+
+    class LifecycleEvent {
+        <<struct>>
+        +uint256 id
+        +uint256 assetId
+        +EventType eventType
+        +address submitter
+        +uint40 timestamp
+        +bytes32 dataHash
+    }
+
+    class EventType {
+        <<enum>>
+        MAINTENANCE = 0
+        VERIFICATION = 1
+        WARRANTY = 2
+        CERTIFICATION = 3
+        CUSTOM = 4
+    }
+
+    class VeriPassErrors {
+        <<library>>
+        +VeriPass_ZeroAddress()
+        +VeriPass_AssetPassport_NotAuthorizedMinter()
+        +VeriPass_AssetPassport_TokenDoesNotExist(uint256)
+        +VeriPass_AssetPassport_PassportInactive(uint256)
+        +VeriPass_EventRegistry_NotTrustedOracle(address)
+        +VeriPass_EventRegistry_NotAssetOwner(uint256, address)
+        +VeriPass_EventRegistry_InvalidDataHash()
+        +VeriPass_EventRegistry_InvalidOracleSignature()
+        +VeriPass_EventRegistry_InvalidEventType()
+    }
+
+    %% Inheritance
+    ERC721 <|-- AssetPassport : extends
+    Ownable <|-- AssetPassport : extends
+    Pausable <|-- AssetPassport : extends
+    Ownable <|-- EventRegistry : extends
+
+    %% Composition
+    AssetPassport *-- AssetInfo : contains
+    EventRegistry *-- LifecycleEvent : contains
+    EventRegistry *-- EventType : uses
+
+    %% Dependencies
+    EventRegistry ..> AssetPassport : validates asset
+    AssetPassport ..> VeriPassErrors : uses
+    EventRegistry ..> VeriPassErrors : uses
+
+    %% Notes
+    note for AssetPassport "Main NFT contract\n- Unique token per asset\n- Stores metadata hash\n- Tracks ownership hand"
+    note for EventRegistry "Event logging contract\n- Append-only design\n- Oracle verification\n- Immutable records"
+    note for EventType "CUSTOM reserved for\nuser-submitted events\n(not oracle verified)"

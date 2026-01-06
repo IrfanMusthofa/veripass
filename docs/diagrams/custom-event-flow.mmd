@@ -1,0 +1,137 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#8b5cf6',
+    'tertiaryColor': '#10b981',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '13px',
+    'actorLineColor': '#003366',
+    'noteBkgColor': '#f5f3ff',
+    'noteTextColor': '#003366',
+    'noteBorderColor': '#8b5cf6'
+  }
+}}%%
+
+sequenceDiagram
+    autonumber
+
+    participant User as 👤 Asset Owner
+    participant Frontend as ⚛️ React Frontend
+    participant Wallet as 🦊 MetaMask
+    participant Backend as 🖥️ Backend API
+    participant DB as 🗄️ PostgreSQL
+    participant Contract as ⛓️ EventRegistry
+    participant BC as 📦 Blockchain
+
+    %% Phase 1: Form Input
+    rect rgb(245, 243, 255)
+        Note over User,Frontend: Phase 1: Event Data Input
+
+        User->>+Frontend: Click "Record Custom Event"<br/>on passport detail page
+
+        Frontend->>Frontend: Verify user is asset owner<br/>ownerOf(tokenId) == userAddress
+
+        alt Not owner
+            Frontend->>User: Error: Not asset owner
+        else Is owner
+            Frontend->>User: Display event form
+        end
+
+        User->>Frontend: Fill event form
+        Note right of User: eventType: CUSTOM<br/>description: "Accident repair"<br/>eventDate: "2024-01-15"<br/>eventData: { location, cost, ... }
+    end
+
+    %% Phase 2: Hash Computation
+    rect rgb(240, 249, 255)
+        Note over Frontend,Backend: Phase 2: Compute Data Hash
+
+        Frontend->>+Backend: POST /api/evidence/hash<br/>Authorization: Bearer {JWT}
+        Note right of Frontend: {assetId, eventType,<br/>eventDate, description,<br/>eventData}
+
+        Backend->>Backend: authMiddleware<br/>Verify JWT token
+
+        Backend->>Backend: calculateHash(eventPayload)<br/>1. Sort keys alphabetically<br/>2. JSON.stringify()<br/>3. keccak256()
+
+        Backend-->>-Frontend: 200 OK<br/>{ dataHash: "0x7a8f..." }
+
+        Frontend->>Frontend: Store dataHash for verification
+    end
+
+    %% Phase 3: Blockchain Transaction
+    rect rgb(254, 249, 195)
+        Note over Frontend,BC: Phase 3: Record Event On-chain
+
+        Frontend->>Frontend: Prepare contract call<br/>useWriteContract hook
+
+        Frontend->>+Wallet: Request signature<br/>recordEvent(assetId, CUSTOM, dataHash)
+
+        Wallet->>User: Confirm transaction?<br/>Gas: ~95,000
+        User->>Wallet: Approve
+
+        Wallet->>+Contract: recordEvent(<br/>  assetId: 1,<br/>  eventType: 4 (CUSTOM),<br/>  dataHash: 0x7a8f...<br/>)
+
+        Contract->>Contract: Get AssetPassport address
+        Contract->>BC: Call assetPassport.ownerOf(assetId)
+        BC-->>Contract: ownerAddress
+
+        Contract->>Contract: require(<br/>  msg.sender == ownerAddress,<br/>  "Not asset owner"<br/>)
+
+        Contract->>Contract: require(<br/>  dataHash != bytes32(0),<br/>  "Invalid data hash"<br/>)
+
+        Contract->>Contract: _eventCounter++
+        Contract->>Contract: _events[eventId] = LifecycleEvent{<br/>  id: eventId,<br/>  assetId: assetId,<br/>  eventType: CUSTOM,<br/>  submitter: msg.sender,<br/>  timestamp: block.timestamp,<br/>  dataHash: dataHash<br/>}
+
+        Contract->>Contract: _assetEvents[assetId].push(eventId)
+
+        Contract->>BC: Store state changes
+
+        Contract->>Contract: emit EventRecorded(<br/>  eventId, assetId, eventType, submitter<br/>)
+
+        Contract-->>-Wallet: Transaction receipt
+        Wallet-->>-Frontend: txHash: 0xdef...
+    end
+
+    %% Phase 4: Create Evidence Record
+    rect rgb(236, 253, 245)
+        Note over Frontend,DB: Phase 4: Store Off-chain Evidence
+
+        Frontend->>Frontend: Wait for confirmation<br/>useWaitForTransactionReceipt
+
+        BC-->>Frontend: Receipt confirmed<br/>Parse eventId from logs
+
+        Frontend->>+Backend: POST /api/evidence<br/>Authorization: Bearer {JWT}
+        Note right of Frontend: {assetId, dataHash,<br/>eventType, eventDate,<br/>description, eventData,<br/>blockchainEventId: eventId,<br/>txHash: "0xdef..."}
+
+        Backend->>Backend: Validate request
+
+        Backend->>+DB: INSERT INTO evidence<br/>status: "CONFIRMED"<br/>isVerified: false<br/>verifiedBy: null
+        Note right of Backend: Custom events are<br/>NOT oracle-verified
+
+        DB-->>-Backend: Evidence created
+
+        Backend-->>-Frontend: 201 Created<br/>{ id, status: "CONFIRMED" }
+
+        Frontend->>User: Custom event recorded!<br/>Event ID: #5
+    end
+
+    %% Phase 5: Viewing Event
+    rect rgb(237, 233, 254)
+        Note over User,Frontend: Phase 5: Event Displayed
+
+        Frontend->>Frontend: Refresh events list
+        Frontend->>User: Event visible in timeline
+        Note over User: Shows:<br/>- CUSTOM badge<br/>- "Not Verified" indicator<br/>- Event details<br/>- Blockchain link
+    end
+
+    %% Comparison with Verified Events
+    rect rgb(254, 226, 226)
+        Note over User,Frontend: Custom vs Verified Events
+
+        Note over User: CUSTOM Event:<br/>- User-submitted<br/>- No oracle verification<br/>- isVerified: false<br/>- Anyone can see it's<br/>  user-submitted
+
+        Note over Frontend: VERIFIED Event:<br/>- Provider-submitted<br/>- Oracle verified<br/>- isVerified: true<br/>- Trusted source indicator
+    end

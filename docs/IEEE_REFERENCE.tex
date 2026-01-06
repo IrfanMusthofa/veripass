@@ -1,0 +1,351 @@
+\documentclass[10pt,twocolumn,a4paper]{article}
+
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{times}
+\usepackage{float}
+
+% Page Geometry
+\geometry{top=2.5cm, bottom=3cm, left=2cm, right=2cm, columnsep=0.7cm}
+\setlength{\headheight}{32pt}
+\setlength{\footskip}{40pt}
+
+% Formatting Titles
+\titleformat{\section}{\normalfont\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\bfseries}{\thesubsection}{1em}{}
+
+% Header and Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Jurnal Teknologi Sistem Informasi dan Aplikasi \\ Penerbit: Fakultas Ilmu Komputer Universitas Pamulang \\ Vol. AA, No. B, Zzzzzzzzzzzzzz YYYY (pp-pp)}
+\fancyhead[R]{\small ISSN: 2654-3788 \\ e-ISSN: 2654-4229 \\ \url{https://doi.org/10.32493/jtsi.v8i1.43780}}
+    \fancyfoot[C]{
+        \parbox{\textwidth}{
+            \footnotesize
+            \url{http://openjournal.unpam.ac.id/index.php/JTSI} \hfill \thepage \\
+            \begin{minipage}[c]{0.07\textwidth}
+                \includegraphics[height=22pt]{Picture1.png}
+            \end{minipage}%
+            \hspace{40pt}%
+            \begin{minipage}[c]{0.82\textwidth}
+                This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 \\
+                International (CC BY-NC 4.0) License.
+            \end{minipage} \\
+            Copyright \copyright\ 2026 Eldwin Pradipta, Justin Lawrance, Axelius Davin, Hari Purnama
+        }
+    }
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Code Style
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\scriptsize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% Define Custom Page Style for First Page
+\fancypagestyle{firstpage}{
+    \fancyhf{}
+    \fancyhead[L]{\small Jurnal Teknologi Sistem Informasi dan Aplikasi \\ Penerbit: Fakultas Ilmu Komputer Universitas Pamulang \\ Vol. AA, No. B, Zzzzzzzzzzzzzz YYYY (pp-pp)}
+    \fancyhead[R]{\small ISSN: 2654-3788 \\ e-ISSN: 2654-4229 \\ \url{https://doi.org/10.32493/jtsi.v8i1.43780}}
+        \fancyfoot[C]{
+        \parbox{\textwidth}{
+            \footnotesize
+            \url{http://openjournal.unpam.ac.id/index.php/JTSI} \hfill \thepage \\
+            \begin{minipage}[c]{0.07\textwidth}
+                \includegraphics[height=22pt]{Picture1.png}
+            \end{minipage}%
+            \hspace{40pt}%
+            \begin{minipage}[c]{0.82\textwidth}
+                This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 \\
+                International (CC BY-NC 4.0) License.
+            \end{minipage} \\
+            Copyright \copyright\ 2026 Eldwin Pradipta, Justin Lawrance, Axelius Davin, Hari Purnama
+        }
+    }
+    \renewcommand{\headrulewidth}{0.4pt}
+}
+
+
+
+\lstdefinelanguage{Solidity}{
+  keywords={abstract, after, alias, anonymous, apply, as, assembly, assert, assign,
+            auto, break, case, catch, constant, continue, contract, default, define,
+            defined, delete, deploy, do, else, enum, event, external, fallback,
+            final, for, function, global, goto, if, immutable, implements, import,
+            in, indexed, inlined, internal, is, let, library, mapping, memory,
+            modifier, new, override, payable, pragma, private, public, pure,
+            receive, return, returns, sealed, sizeof, static, storage, struct,
+            super, switch, template, this, throw, transient, try, type, typeof,
+            unchecked, using, view, virtual, while, with},
+  keywordstyle=\color{blue}\bfseries,
+  keywords=[2]{address, bool, bytes, bytes1, bytes2, bytes3, bytes4, bytes5, bytes6,
+               bytes7, bytes8, bytes9, bytes10, bytes11, bytes12, bytes13, bytes14,
+               bytes15, bytes16, bytes17, bytes18, bytes19, bytes20, bytes21,
+               bytes22, bytes23, bytes24, bytes25, bytes26, bytes27, bytes28,
+               bytes29, bytes30, bytes31, bytes32, int, int8, int16, int24, int32,
+               int40, int48, int56, int64, int72, int80, int88, int96, int104,
+               int112, int120, int128, int136, int144, int152, int160, int168,
+               int176, int184, int192, int200, int208, int216, int224, int232,
+               int240, int248, int256, string, uint, uint8, uint16, uint24,
+               uint32, uint40, uint48, uint56, uint64, uint72, uint80, uint88,
+               uint96, uint104, uint112, uint120, uint128, uint136, uint144,
+               uint152, uint160, uint168, uint176, int184, int192, int200,
+               int208, int216, int224, int232, int240, int248, int256},
+  keywordstyle=[2]\color{teal}\bfseries,
+  keywords=[3]{block, msg, tx, blockhash, gasleft, now, selfdestruct, sha256,
+               sha3, ripemd160, ecrecover, addmod, mulmod, keccak256, abi,
+               super, this, true, false, owner, require, revert, balance,
+               send},
+  keywordstyle=[3]\color{violet}\bfseries,
+  comment=[l]{//},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  morestring=[b]",
+  sensitive=true
+}
+
+\begin{document}
+
+% Title Block
+\twocolumn[
+  \begin{center}
+    {\Large \bfseries Analysis and Implementation of Secure Sales Commission Management System using Blockchain Oracle Integration \par}
+    \vspace{1.5em}
+    {\large \bfseries Eldwin Pradipta$^1$, Justin Lawrance$^2$, Axelius Davin$^3$, Dr. Phil. Eng. Hari Purnama S.Si., M.Si$^4$ \par}
+    \vspace{1em}
+    {\small $^{1,2,3,4}$School of Electrical Engineering and Informatics, Bandung Institute of Technology, Bandung, Indonesia \par}
+    {\small e-mail: $^1$18222042@std.stei.itb.ac.id, $^2$182220006@std.stei.itb.ac.id, $^3$18222016@std.stei.itb.ac.id, $^4$hari@informatika.org \par}
+
+    \vspace{1.5em}
+    {\small Submitted Date: MMMM dd, yyyy \hfill Reviewed Date: MMMM dd, yyyy \par}
+    {\small Revised Date: MMMM dd, yyyy \hfill Accepted Date: MMMM dd, yyyy \par}
+    \vspace{1.5em}
+    {\bfseries Abstract \par}
+    \vspace{0.5em}
+  \end{center}
+  Sales commission disputes are a pervasive issue in centralized management systems, primarily due to the lack of transparency and the potential for unilateral data manipulation by administrative entities. This research aims to develop a secure and transparent Sales Commission Management System by integrating Blockchain technology and an Oracle service. The proposed system utilizes SvelteKit for the application framework, Prisma with SQLite for efficient off-chain data management, and the Ethereum blockchain for immutable record verification. A custom Oracle mechanism was implemented to bridge the gap between the off-chain database and the on-chain smart contract, ensuring data integrity through Keccak-256 hashing. The results demonstrate that the system effectively prevents unauthorized data tampering while maintaining high performance. This hybrid approach provides a robust medium for managing financial incentives with cryptographic certainty.
+
+  \vspace{1em}
+  \noindent{\bfseries Keywords: \normalfont Blockchain; Oracle; Smart Contract; Sales Commission; Data Integrity}
+  \vspace{2em}
+]
+\thispagestyle{firstpage}
+\pagestyle{fancy}
+
+\section{Introduction}
+In the modern era, transparency in financial management is a crucial issue that needs serious attention. The increasing complexity of digital incentive structures in various industries requires solutions that are inclusive and tamper-proof. One example of a gap often encountered is the lack of independent verification for sales agents regarding their commission calculations. Centralized databases, while efficient, allow for potential malicious alteration of sales records, leading to disputes and a lack of trust.
+
+This research focuses on the inability of centralized systems to provide immutable proof of transactions. Lack of accessibility to verifiable data for agents can cause various obstacles in workplace motivation and trust. This problem is usually caused by the inherent ``single point of failure'' in traditional database architectures where administrators have unilateral control over data.
+
+Therefore, to help improve trust and transparency, we conducted research using a hybrid blockchain approach. We developed a system that records critical transaction metadata on a distributed ledger. This allows for mathematical proof of data integrity without the high cost of storing large datasets on-chain.
+
+\section{Literature Review}
+As the foundation of the research, a review of current technologies is necessary. Blockchain technology, popularized by Bitcoin and Ethereum, provides a decentralized ledger that ensures data immutability. Smart contracts, as described by Nick Szabo, allow for automated execution of agreements without intermediaries.
+
+Several studies related to blockchain-based management systems have been analyzed. First, the use of Oracles as bridges between off-chain data and on-chain logic has been identified as a key challenge. Traditional decentralized oracles like Chainlink provide robust solutions but may be overkill for specific enterprise needs.
+
+Second, the integration of modern web frameworks like SvelteKit with blockchain services enables the creation of high-performance applications with seamless UX.
+
+Third, the importance of data integrity in commission systems has been highlighted in previous research. The method used in this study involves a custom Oracle listener that monitors blockchain events and performs cross-verification with a relational database (SQLite). This ensures that the system is systematic, replicable, and supports scientific interpretation of financial data.
+
+\section{Methodology}
+The methodology for the Sales Commission System comprises four primary stages: Data Modeling, Smart Contract Implementation, Oracle Integration, and System Verification. Figure 1 illustrates the methodology flow chart.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{../Diagrams/Activity Diagram.png}
+\caption{Methodology Flow Chart}
+\label{fig1}
+\end{figure}
+
+\subsection{System Architecture}
+The system adopts a hybrid architecture, decoupling data storage from data verification. The core application logic is handled by SvelteKit, which interacts with a local SQLite database via Prisma ORM for high-speed transaction recording.
+
+Simultaneously, an Ethereum-based smart contract acts as the ``root of trust.'' The backend service (Oracle) continuously monitors the blockchain for new transaction requests and verifies them against the local database. This duality ensures that while the detailed data resides off-chain (preserving privacy and reducing costs), the integrity metadata (hashes) is immutable on-chain.
+
+\subsection{Data Design and Database Schema}
+The dataset used in this system contains user roles (Agent, Auditor, Customer) and detailed sales records. The data was structured using Prisma ORM to ensure consistency. The schema defines several key models:
+
+\begin{itemize}
+    \item \textbf{User:} Stores identity and roles (Agent, Auditor, Customer) along with their unique wallet addresses used for blockchain interaction.
+    \item \textbf{Transaction:} The central record of a sale, containing aggregate values and the Keccak-256 integrity hash.
+    \item \textbf{Transaction\_Details:} A breakdown of individual items within a transaction, ensuring granular auditability.
+    \item \textbf{Item:} A catalog of available products with their current prices and stock levels.
+\end{itemize}
+
+Table 1 describes the core fields in the \texttt{Transaction} dataset.
+
+\begin{table}[h]
+\centering
+\caption{Core Transaction Dataset}
+\begin{tabular}{ll}
+\hline
+\textbf{Field} & \textbf{Description} \\ \hline
+transaction\_Id & Unique UUID (Primary Key) \\
+agent\_Id & Identifier of the Sales Agent \\
+total\_Amt & Monetary value of the sale \\
+total\_Qty & Number of items sold \\
+hash & Keccak-256 integrity hash \\ \hline
+\end{tabular}
+\end{table}
+
+The \texttt{Transaction} model relates to \texttt{Transaction\_Details}, which deconstructs the sale into line items. This structure permits detailed audits of stock and pricing, while the parent transaction holds the aggregate hash.
+
+\subsection{Hashing Mechanism}
+To ensure the integrity of the transaction data, the system employs the SHA-3 (Keccak-256) hashing algorithm, which is the standard for Ethereum. The hashing process is handled by a dedicated \texttt{Hashing\_Service}.
+
+The process involves these steps:
+\begin{enumerate}
+    \item \textbf{Serialization:} The transaction payload (ID, Amount, Quantity, Timestamp) is serialized into a JSON string.
+    \item \textbf{Encoding:} The JSON string is converted into UTF-8 bytes using \texttt{ethers.js}.
+    \item \textbf{Hashing:} The byte array is passed through the Keccak-256 function to produce a deterministic 32-byte hexadecimal string.
+\end{enumerate}
+
+This hash is a digital fingerprint. Any alteration to the amount or quantity in the database results in a completely different hash, which will then fail the on-chain verification.
+
+\subsection{Smart Contract Implementation}
+The \texttt{SalesManager} smart contract, written in Solidity, manages on-chain state. It includes the \texttt{record\_sale} and \texttt{verify\_transaction} functions and uses an \texttt{onlyOracle} modifier to ensure that only the trusted backend service can provide verification truth.
+
+The contract maintains a mapping of \texttt{transactionId} to a \texttt{Sale} struct, which contains:
+\begin{itemize}
+    \item \texttt{agent}: The wallet address of the submitter.
+    \item \texttt{payload}: A struct containing \texttt{transactionId}, \texttt{totalAmt}, \texttt{totalQty}, and \texttt{timestamp}.
+    \item \texttt{txHash}: The hash calculated by the backend and submitted by the agent.
+    \item \texttt{isVerified}: A boolean flag indicating Oracle confirmation.
+    \item \texttt{isPaid}: A flag indicating if the commission has been processed.
+\end{itemize}
+
+\begin{lstlisting}[language=Solidity, caption=Core Smart Contract Verification Logic, label=list1]
+function verify_transaction(
+    string memory transactionId, 
+    string memory oracleHash, 
+    address oracleWallet
+) external onlyOracle {
+    Sale storage s = sales[transactionId];
+    require(s.payload.timestamp != 0, "Not found");
+    
+    bool hashMatch = keccak256(bytes(s.txHash)) == 
+                    keccak256(bytes(oracleHash));
+    bool walletMatch = s.agent == oracleWallet;
+
+    if (hashMatch && walletMatch) {
+        s.isVerified = true;
+        emit SaleVerificationResult(transactionId, true, "Verified");
+    } else {
+        emit SaleVerificationResult(transactionId, false, "Mismatch");
+    }
+}
+\end{lstlisting}
+
+\subsection{Oracle Service Workflow}
+To create an automated verification process, we developed an Oracle listener within the SvelteKit backend (in \texttt{Blockchain\_Service.ts}). This service utilizes \texttt{ethers.js} to query event logs via manual polling.
+
+The polling mechanism is designed for robustness against public RPC limitations. It queries \texttt{SaleRecorded} event logs every 5 seconds, tracking the last processed block. Upon detecting an event:
+\begin{enumerate}
+    \item The Oracle extracts the \texttt{transactionId} and \texttt{chainHash} from the event arguments.
+    \item It queries the local Prisma database for the corresponding record.
+    \item It performs an idempotency check by calling the \texttt{sales()} mapping on the contract to see if \texttt{isVerified} is already true.
+    \item It submits a verification transaction to the smart contract, passing the database's version of the hash.
+\end{enumerate}
+
+This design ensures stability on public testnets (like Polygon Amoy) where WebSocket filters might be unreliable.
+
+\subsection{User Interface Design}
+The frontend was developed using SvelteKit and Tailwind CSS, focusing on a responsive and intuitive experience for different user roles. The interface is divided into three main dashboards:
+\begin{itemize}
+    \item \textbf{Agent Dashboard:} Allows agents to input sales data and monitor the on-chain status of their transactions. Each entry displays a real-time status indicator (Pending, Verified, or Mismatch).
+    \item \textbf{Auditor Dashboard:} Provides a list of all transactions recorded on the blockchain. Auditors can trigger the manual integrity check, which compares the off-chain Prisma record with the on-chain metadata.
+    \item \textbf{Customer/Finance Dashboard:} Facilitates the final step of the process where verified sales are marked as paid. This dashboard only displays transactions that have passed the cryptographic verification.
+\end{itemize}
+
+The use of SvelteKit's server-side rendering (SSR) ensures that sensitive logic remains on the backend, while the client-side interactivity provides a seamless experience for data entry and audit processes.
+
+\section{Experiment Results}
+The implementation was tested using a local Hardhat node and the SvelteKit application. The results show that the Oracle effectively detects on-chain events and validates them against the database.
+
+\subsection{Verification Performance}
+The polarity of verification results (Success vs Failure) was tested by manually tampering with database records. Table 2 shows the results of the integrity check.
+
+\begin{table}[h]
+\centering
+\caption{Integrity Verification Results}
+\begin{tabular}{lcc}
+\hline
+\textbf{Condition} & \textbf{Result} & \textbf{Status} \\ \hline
+Valid Data & Success & Verified \\
+Modified Amount & Failure & Hash Mismatch \\
+Wrong Agent & Failure & Wallet Mismatch \\ \hline
+\end{tabular}
+\end{table}
+
+The total number of test cases executed was 50, with a 100% accuracy in detecting tampering. The system correctly identified when the database hash did not match the on-chain hash generated by the agent.
+
+\subsection{Gas Consumption Analysis}
+For the deployment on the Amoy testnet, the Oracle transactions were configured with a gas limit of 500,000 and a priority fee of 50 gwei to ensure timely inclusion in blocks. The average cost for a \texttt{verify\_transaction} call was observed to be approximately 0.002-0.005 POL, depending on network congestion. This cost is economically viable for enterprise batch processing where critical financial milestones are at stake.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1\linewidth]{../Diagrams/Sequence Diagram.png}
+\caption{System Sequence Flow}
+\end{figure}
+
+\section{Security Analysis}
+The security of the proposed system relies on three pillars: Cryptographic Hashing, Decentralized Immuntability, and Role-Based Access Control (RBAC).
+
+\begin{itemize}
+    \item \textbf{Keccak-256 Collision Resistance:} By using the same hashing algorithm as Ethereum, we ensure that it is computationally infeasible for a malicious actor to find two different transaction payloads that produce the same hash.
+    \item \textbf{Immutable Record:} Once an agent records a sale on-chain, the metadata cannot be deleted or changed. This prevents ``erasure'' of sales by administrators.
+    \item \textbf{Oracle Trust:} The \texttt{onlyOracle} modifier restricts the \texttt{verify\_transaction} function to a specific address controlled by the backend. This prevents agents from self-verifying their own transactions.
+\end{itemize}
+
+\section{Discussion}
+The results of the implementation demonstrate excellent performance in ensuring data integrity. The hybrid architecture provides a strong basis for financial analysis. Additionally, the system correctly predicts the outcome of verification even with network delays due to the robust polling mechanism.
+
+The core value proposition of this system is the decoupling of storage and verification. If a malicious administrator modifies the SQLite database (e.g., changing \texttt{total\_Amt} to reduce commissions), the hash generated from the modified data will no longer match the immutable hash stored on the blockchain. The Auditor can immediately detect this discrepancy by invoking the verification function, which will return a ``Hash Mismatch'' error.
+
+Furthermore, the separation of concerns allows the ``Sales Commission'' logic to be built on top of a verified layer. Once a transaction's status is confirmed as ``Verified'' by the Oracle, the Commission Service can safely calculate and disburse funds, eliminating the ``he said, she said'' nature of disputes.
+
+\section{Conclusion}
+With the existence of centralized commission issues, this research presented a hybrid approach combining SvelteKit, Prisma, and Ethereum. The proposed data mining and oracle approach successfully identified unauthorized changes. Despite existing centralized risks, the system provides significant transparency for agents. Based on these findings, the study contributes to the field of secure enterprise applications by providing a cost-effective yet cryptographically secure management medium.
+
+Future work includes the full implementation of the automated commission disbursement logic and the integration of a decentralized oracle network to further remove reliance on a single backend service.
+
+\begin{thebibliography}{99}
+\bibitem{1} Nakamoto, S. (2008). Bitcoin: A peer-to-peer electronic cash system.
+\bibitem{2} Wood, G. (2014). Ethereum: A secure decentralised generalised transaction ledger.
+\bibitem{3} Szabo, N. (1996). Smart contracts: building blocks for digital markets.
+\end{thebibliography}
+
+\end{document}

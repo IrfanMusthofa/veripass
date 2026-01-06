@@ -1,0 +1,133 @@
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#003366',
+    'primaryTextColor': '#ffffff',
+    'primaryBorderColor': '#002244',
+    'secondaryColor': '#10b981',
+    'tertiaryColor': '#f59e0b',
+    'lineColor': '#003366',
+    'fontFamily': 'Inter, system-ui, sans-serif',
+    'fontSize': '13px'
+  }
+}}%%
+
+flowchart TB
+    subgraph MINTING["📝 MINTING FLOW"]
+        direction TB
+
+        M1["👤 User fills mint form<br/><i>manufacturer, model, serial#, etc.</i>"]
+        M2["⚛️ Frontend computes<br/><b>metadataHash</b><br/><i>keccak256(sortedJSON)</i>"]
+        M3["📤 POST /api/assets<br/><i>Create asset with PENDING status</i>"]
+        M4["🗄️ Backend stores metadata<br/><i>+ computed dataHash</i>"]
+        M5["🦊 User signs transaction<br/><i>mintPassport(to, metadataHash)</i>"]
+        M6["⛓️ AssetPassport.mintPassport()<br/><i>Stores hash on-chain</i>"]
+        M7["📡 Wait for confirmation<br/><i>Watch for PassportMinted event</i>"]
+        M8["✅ PATCH /api/assets/:id/mint-status<br/><i>Update to MINTED + txHash</i>"]
+
+        M1 --> M2
+        M2 --> M3
+        M3 --> M4
+        M4 --> M5
+        M5 --> M6
+        M6 --> M7
+        M7 --> M8
+    end
+
+    subgraph VERIFICATION["🔍 VERIFICATION FLOW"]
+        direction TB
+
+        V1["👤 User views passport detail"]
+        V2["📡 GET /api/assets/:id<br/><i>Fetch off-chain metadata</i>"]
+        V3["⛓️ getAssetInfo(tokenId)<br/><i>Fetch on-chain hash</i>"]
+        V4["🔄 Frontend recomputes hash<br/><i>from off-chain metadata</i>"]
+        V5{"Compare Hashes"}
+        V6["✅ VERIFIED<br/><i>Data integrity confirmed</i>"]
+        V7["❌ MISMATCH<br/><i>Data may be tampered</i>"]
+        V8["⏳ PENDING<br/><i>Not yet on-chain</i>"]
+
+        V1 --> V2
+        V1 --> V3
+        V2 --> V4
+        V3 --> V5
+        V4 --> V5
+        V5 -->|"onChain == computed"| V6
+        V5 -->|"onChain != computed"| V7
+        V5 -->|"no on-chain data"| V8
+    end
+
+    subgraph CUSTOM_EVENT["📋 CUSTOM EVENT FLOW"]
+        direction TB
+
+        C1["👤 Owner clicks 'Record Event'"]
+        C2["📝 Fill event form<br/><i>type, description, date, data</i>"]
+        C3["📤 POST /api/evidence/hash<br/><i>Get computed dataHash</i>"]
+        C4["🦊 User signs transaction<br/><i>recordEvent(assetId, type, hash)</i>"]
+        C5["⛓️ EventRegistry.recordEvent()<br/><i>Validates owner, stores event</i>"]
+        C6["📡 POST /api/evidence<br/><i>Create evidence with txHash</i>"]
+        C7["✅ Event recorded<br/><i>status: CONFIRMED, isVerified: false</i>"]
+
+        C1 --> C2
+        C2 --> C3
+        C3 --> C4
+        C4 --> C5
+        C5 --> C6
+        C6 --> C7
+    end
+
+    subgraph VERIFIED_EVENT["🔮 VERIFIED EVENT FLOW"]
+        direction TB
+
+        O1["🏭 Provider submits service record<br/><i>POST /api/provider/service-records</i>"]
+        O2["🗄️ Stored in service_records_provider_a<br/><i>verified: true</i>"]
+        O3["🔮 Oracle polls for new records<br/><i>every 15-30 seconds</i>"]
+        O4["📋 Create processed_service_records<br/><i>status: PROCESSING</i>"]
+        O5["🔐 Oracle computes hash & signs<br/><i>keccak256 + wallet signature</i>"]
+        O6["⛓️ recordVerifiedEvent()<br/><i>Submit as trusted oracle</i>"]
+        O7["🗄️ Create evidence record<br/><i>isVerified: true, verifiedBy: oracle</i>"]
+        O8["✅ Update processing status<br/><i>COMPLETED + txHash + eventId</i>"]
+
+        O1 --> O2
+        O2 --> O3
+        O3 --> O4
+        O4 --> O5
+        O5 --> O6
+        O6 --> O7
+        O7 --> O8
+    end
+
+    subgraph HASH_INTEGRITY["🔐 HASH INTEGRITY"]
+        direction LR
+
+        H1["📄 Raw Metadata"]
+        H2["🔄 Sort Keys<br/><i>alphabetically</i>"]
+        H3["📝 JSON.stringify()"]
+        H4["#️⃣ keccak256()"]
+        H5["0x... Hash"]
+
+        H1 --> H2 --> H3 --> H4 --> H5
+    end
+
+    %% Cross-flow connections
+    M8 -.->|"Asset ready"| V1
+    C7 -.->|"Event visible"| V1
+    O8 -.->|"Verified event visible"| V1
+
+    %% Styling
+    classDef mintStyle fill:#4a90d9,stroke:#003366,stroke-width:2px,color:#fff
+    classDef verifyStyle fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff
+    classDef customStyle fill:#8b5cf6,stroke:#6d28d9,stroke-width:2px,color:#fff
+    classDef oracleStyle fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    classDef hashStyle fill:#6b7280,stroke:#374151,stroke-width:2px,color:#fff
+    classDef successStyle fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff
+    classDef errorStyle fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#fff
+    classDef pendingStyle fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+
+    class MINTING mintStyle
+    class VERIFICATION verifyStyle
+    class CUSTOM_EVENT customStyle
+    class VERIFIED_EVENT oracleStyle
+    class HASH_INTEGRITY hashStyle
+    class V6,C7,O8 successStyle
+    class V7 errorStyle
+    class V8 pendingStyle
