@@ -139,7 +139,7 @@ export function EventTimeline({
       </CardHeader>
 
       <CardBody>
-        {filteredEvents.length > 0 && (
+        {events.length > 0 && (
           <div className="mb-[var(--spacing-4)]">
             <EventTypeFilter
               selectedType={selectedType}
